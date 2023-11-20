@@ -1,0 +1,26 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@floating-ui/react": "^0.26.2",
+    "mysql2": "^3.6.3",
+    "net": "^1.0.2",
+    "next": "latest",
+    "react": "18.2.0",
+    "react-async": "^10.0.1",
+    "react-dom": "18.2.0",
+    "tls": "^0.0.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "20.9.1",
+    "@types/react": "18.2.37",
+    "typescript": "5.2.2"
+  }
+}

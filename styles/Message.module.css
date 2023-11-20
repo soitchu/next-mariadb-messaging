@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+.message {
+    padding: 10px 15px;
+    width: auto;
+    color: black;
+    font-family: "Outfit", sans-serif;
+    display: table;
+    background: white;
+    font-size: 20px;
+    min-width: 100px;
+    max-width: calc(100% - 30px);
+    overflow-wrap: anywhere;
+}
+
+.message.left {
+    border-radius: 10px 10px 10px 0;
+    margin: 10px 10px;
+}
+
+.message.right {
+    border-radius: 10px 10px 0 10px;
+    margin-left: auto;
+    margin-top: 10px;
+    margin-right: 10px;
+}
+
+
+.time {
+    font-size: 0.7em;
+    color: grey;
+    margin-top: 2px;
+}
