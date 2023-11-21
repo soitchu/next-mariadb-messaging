@@ -4,8 +4,8 @@ import Message from "./Message";
 import { Menu, MenuItem, openContextMenu } from "../ContextMenu";
 import React from "react";
 
-
 async function sendMessage(message: string, recipientId: number) {
+  if (!message) return;
   const response = await fetch("/api/sendMessage", {
     method: "POST",
     body: JSON.stringify({
@@ -21,21 +21,45 @@ async function sendMessage(message: string, recipientId: number) {
   }
 }
 
+
+function binarySearch(data, val) {
+  let start = 0;
+  let end = data.length - 1;
+
+  while (start <= end) {
+    let mid = Math.floor((start + end) / 2);
+    console.log(data[mid].id, val);
+    if (data[mid].id === val) {
+      return mid;
+    }
+
+    if (val > data[mid].id) {
+      end = mid - 1;
+    } else {
+      start = mid + 1;
+    }
+  }
+  return -1;
+}
+
 export default function Chat(props) {
   const messageElems = [];
   const containerElem = useRef(null);
 
   const [oldestId, changeOldestId] = React.useState(props.data[props.data.length - 1]?.id ?? -1);
   const [newestId, changeNewestId] = React.useState(props.data[0]?.id ?? -1);
+  const [forceRefresh, changeForceRefresh] = React.useState(0);
+
   let fetching = false;
   let newFetching = false;
 
   for (const messageData of props.data) {
+    console.log(messageData.recipient_id, props.config.userId);
     messageElems.push(
       <Message
         key={messageData.id}
         content={messageData.message}
-        align={messageData.recipient_id === 1 ? "left" : "right"}
+        align={messageData.recipient_id === props.config.userId ? "left" : "right"}
         time={messageData.created_at}
         id={messageData.id}
       ></Message>
@@ -45,7 +69,6 @@ export default function Chat(props) {
   messageElems.reverse();
 
   async function fetchNewMessages() {
-    console.log(newFetching);
     if (newFetching) return;
 
     newFetching = true;
@@ -67,9 +90,8 @@ export default function Chat(props) {
           })
         })).json();
 
-        props.data.unshift(...newMessages.reverse());
+        props.data.unshift(...newMessages);
 
-        console.log(newMessages);
         changeNewestId(newMessages[0].id);
         props.config.scrollToBottom = true;
       } else {
@@ -108,8 +130,9 @@ export default function Chat(props) {
 
   const messageContainer = <div
     style={{
-      maxHeight: "calc(100% - 60px)",
-      overflowY: "auto"
+      height: "calc(100% - 60px)",
+      overflowY: "auto",
+      overflowX: "hidden"
     }}
     ref={containerElem}
     onScroll={function (event) {
@@ -149,27 +172,39 @@ export default function Chat(props) {
 
   }, [messageElems.length])
 
-  // onClick={function (event) {
-  //   openContextMenu(event);
-  // }}
   return (
     <div className={styles.chatCon}>
       {messageContainer}
 
       <Menu>
-        <MenuItem label="Back" onClick={function (event) {
-          console.log(event)
+        <MenuItem label="Delete" onClick={async function (event) {
+          const messageId = localStorage.getItem("delete-message");
+
+          const response = await fetch("/api/deleteMessage", {
+            method: "POST",
+            body: JSON.stringify({
+              messageId,
+              recipientId: props.config.chatId
+            })
+          });
+
+          if (response.ok) {
+            const messageIndex = binarySearch(props.data, Number(messageId));
+
+            if (messageIndex !== -1) {
+              props.data.splice(messageIndex, 1);
+              changeForceRefresh(forceRefresh + 1);
+            }
+          } else {
+            // alert(await response.text());
+          }
         }} />
-        <MenuItem label="Forward" />
-        <MenuItem label="Reload" disabled />
-        <MenuItem label="Save As..." />
-        <MenuItem label="Print" />
       </Menu>
 
       <input
         className={styles.messageBox}
         onKeyDown={async function (event) {
-          if (event.key === "Enter" && !event.altKey && !event.ctrlKey) {
+          if (event.key === "Enter" && !event.altKey && !event.ctrlKey && !event.shiftKey) {
             const message = (event.target as HTMLInputElement).value;
             await sendMessage(message, props.config.chatId);
             (event.target as HTMLInputElement).value = "";

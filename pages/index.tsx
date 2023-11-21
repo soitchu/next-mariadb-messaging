@@ -7,17 +7,24 @@ import React from 'react';
 import Chat from '../Components/ChatList/Chat';
 import Custom500 from './500';
 import Custom404 from './404';
+import { getUserIdByCookie } from '../Components/helper';
 
 export const getServerSideProps = (async (context) => {
+
   await init();
-  const chats = await getChats();
-  const messages = await getMessages(1, context.query.chat, Infinity);
+  const userId = Number(await getUserIdByCookie(context.req.cookies["X-Auth-Token"]));
+  const chats = await getChats(userId);
+  const messages = await getMessages(userId, context.query.chat, Infinity);
 
   return {
     props: {
       chats,
       messages,
-      chatId: context.query.chat
+      chatId: context.query.chat,
+      userId  // Not used for authentication (that'd be a bad idea)
+      // It's solely used to align the messages correctly
+      // so it isn't a security issue if it's changed on 
+      // the client
     }
   }
 });
@@ -45,6 +52,7 @@ export default function Home(props) {
         data={...props.messages}
         config={{
           chatId: props.chatId,
+          userId: Number(props.userId),
           scrollToBottom: true
         }}
       ></Chat>

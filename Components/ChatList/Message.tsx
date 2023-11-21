@@ -1,25 +1,20 @@
 import styles from "../../styles/Message.module.css";
 import { openContextMenu } from "../ContextMenu";
+import { dateToHuman } from "../helperClient";
 
 function handleClick(event) {
-  const check = confirm("");
-  const messageId = (event.currentTarget.dataset.id);
-
-  fetch("/api/deleteMessage", {
-    method: "POST",
-    body: JSON.stringify({
-      messageId,
-    })
-  });
+  console.log(event.currentTarget.classList.contains(styles.right));
+  localStorage.setItem("delete-message", (event.currentTarget.dataset.id));
+  openContextMenu(event);
 }
 
 // function MessageElem() {
 export default function Message({ content, time, align, id }) {
   return (
-    <div className={styles.message + " " + styles[align]} data-id={id} onClick={handleClick}>
+    <div className={styles.message + " " + styles[align]} data-id={id} onContextMenu={handleClick}>
       {content}
       <div className={styles.time}>
-        {time}
+        {dateToHuman(time)}
       </div>
     </div>
   );

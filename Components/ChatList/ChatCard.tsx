@@ -1,5 +1,6 @@
 import styles from "../../styles/ChatCard.module.css"
 import { useRouter } from 'next/router';
+import { dateToHuman } from "../helperClient";
 
 interface CardParams {
     username: string,
@@ -32,7 +33,7 @@ export default function ChatCard({ username, time, message, id, unreadCount }: C
                 <div className={styles.message}>{message}</div>
             </div>
             <div className={styles.time}>
-                {time}
+                {dateToHuman(time)}
                 <div className={styles.unread} style={{
                     display: unreadCount === 0 ? "none" : "flex"
                 }}>{unreadCount}</div>

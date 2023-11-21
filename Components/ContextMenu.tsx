@@ -54,6 +54,7 @@ export const Menu = forwardRef<
     HTMLButtonElement,
     Props & React.HTMLProps<HTMLButtonElement>
 >(({ children }, forwardedRef) => {
+
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
 
