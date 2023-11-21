@@ -1,0 +1,8 @@
+{
+    "editor.codeActionsOnSave": {
+      "esbenp.prettier-vscode": true
+    },
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true,
+    "eslint.validate": ["typescript"]
+  }

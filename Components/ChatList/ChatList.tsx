@@ -2,12 +2,10 @@ import ChatCard from "./ChatCard";
 import styles from "../../styles/ChatList.module.css";
 import React, { useEffect } from "react";
 
-
 export default function ChatList(props) {
   let chatFetching = false;
   const chatElems = [];
   const [forceRefresh, changeForceRefresh] = React.useState(0);
-
 
   async function fetchChats() {
     if (chatFetching) return;
@@ -15,9 +13,11 @@ export default function ChatList(props) {
     chatFetching = true;
 
     try {
-      const response = await (await fetch(`/api/getChat`, {
-        method: "POST",
-      })).json();
+      const response = await (
+        await fetch(`/api/getChat`, {
+          method: "POST"
+        })
+      ).json();
 
       if (response.length != props.data.length) {
         // @todo refactor this
@@ -29,7 +29,7 @@ export default function ChatList(props) {
           if (
             response[i].sender_id != props.data[i].sender_id ||
             response[i].id != props.data[i].id ||
-            response[i].unread_count != props.data[i].unread_count            
+            response[i].unread_count != props.data[i].unread_count
           ) {
             // @todo refactor
             props.data.length = 0;
@@ -39,14 +39,12 @@ export default function ChatList(props) {
           }
         }
       }
-
     } catch (err) {
       console.error(err);
     }
 
     chatFetching = false;
   }
-
 
   useEffect(() => {
     const id = setInterval(fetchChats, 3000);
@@ -55,10 +53,7 @@ export default function ChatList(props) {
       console.log("clearedd");
       clearInterval(id);
     };
-
-  }, [forceRefresh])
-
-
+  }, [forceRefresh]);
 
   for (const chatData of props.data) {
     chatElems.push(
@@ -73,9 +68,5 @@ export default function ChatList(props) {
     );
   }
 
-  return (
-    <div className={styles.chatListCon}>
-      {chatElems}
-    </div>
-  );
+  return <div className={styles.chatListCon}>{chatElems}</div>;
 }

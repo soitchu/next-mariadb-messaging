@@ -1,3 +1,3 @@
 export function Login() {
-    return <h1>Logion</h1>;
+  return <h1>Logion</h1>;
 }

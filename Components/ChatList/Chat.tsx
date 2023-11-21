@@ -21,7 +21,6 @@ async function sendMessage(message: string, recipientId: number) {
   }
 }
 
-
 function binarySearch(data, val) {
   let start = 0;
   let end = data.length - 1;
@@ -76,21 +75,22 @@ export default function Chat(props) {
 
     try {
       const response = await fetch(`/api/getLastId?sender_id=${props.config.chatId}`, {
-        method: "GET",
+        method: "GET"
       });
 
       const serverNewestId = (await response.json()).id;
       console.log(newestId, serverNewestId);
       if (newestId < serverNewestId) {
-
-        const newMessages = await (await fetch("/api/getMessages", {
-          method: "POST",
-          body: JSON.stringify({
-            recipientId: props.config.chatId,
-            oldestId: newestId,
-            greater: "true"
+        const newMessages = await (
+          await fetch("/api/getMessages", {
+            method: "POST",
+            body: JSON.stringify({
+              recipientId: props.config.chatId,
+              oldestId: newestId,
+              greater: "true"
+            })
           })
-        })).json();
+        ).json();
 
         props.data.unshift(...newMessages);
 
@@ -99,7 +99,6 @@ export default function Chat(props) {
       } else {
         newFetching = false;
       }
-
     } catch (err) {
       newFetching = false;
       console.error(err);
@@ -111,7 +110,6 @@ export default function Chat(props) {
 
     fetching = true;
     try {
-
       const response = await fetch("/api/getMessages", {
         method: "POST",
         body: JSON.stringify({
@@ -120,8 +118,7 @@ export default function Chat(props) {
         })
       });
 
-
-      props.data.push(...await response.json());
+      props.data.push(...(await response.json()));
       changeOldestId(props.data[props.data.length - 1].id);
     } catch (err) {
       fetching = false;
@@ -129,25 +126,25 @@ export default function Chat(props) {
     }
   }
 
-  const messageContainer = <div
-    style={{
-      height: "calc(100% - 60px)",
-      overflowY: "auto",
-      overflowX: "hidden"
-    }}
-    ref={containerElem}
-    onScroll={function (event) {
-      if (containerElem.current.scrollTop < 400) {
-        fetchOldMessages();
-      }
-    }}
-  >
-    {messageElems}
-  </div>;
-
+  const messageContainer = (
+    <div
+      style={{
+        height: "calc(100% - 60px)",
+        overflowY: "auto",
+        overflowX: "hidden"
+      }}
+      ref={containerElem}
+      onScroll={function (event) {
+        if (containerElem.current.scrollTop < 400) {
+          fetchOldMessages();
+        }
+      }}
+    >
+      {messageElems}
+    </div>
+  );
 
   useEffect(() => {
-
     // @todo: change this to setTimeout
     // let brk = false;
     // async function checkNewMessage() {
@@ -170,36 +167,38 @@ export default function Chat(props) {
       console.log("cleared");
       clearInterval(id);
     };
-
-  }, [messageElems.length])
+  }, [messageElems.length]);
 
   return (
     <div className={styles.chatCon}>
       {messageContainer}
 
       <Menu>
-        <MenuItem label="Delete" onClick={async function (event) {
-          const messageId = localStorage.getItem("delete-message");
+        <MenuItem
+          label="Delete"
+          onClick={async function (event) {
+            const messageId = localStorage.getItem("delete-message");
 
-          const response = await fetch("/api/deleteMessage", {
-            method: "POST",
-            body: JSON.stringify({
-              messageId,
-              recipientId: props.config.chatId
-            })
-          });
+            const response = await fetch("/api/deleteMessage", {
+              method: "POST",
+              body: JSON.stringify({
+                messageId,
+                recipientId: props.config.chatId
+              })
+            });
 
-          if (response.ok) {
-            const messageIndex = binarySearch(props.data, Number(messageId));
+            if (response.ok) {
+              const messageIndex = binarySearch(props.data, Number(messageId));
 
-            if (messageIndex !== -1) {
-              props.data.splice(messageIndex, 1);
-              changeForceRefresh(forceRefresh + 1);
+              if (messageIndex !== -1) {
+                props.data.splice(messageIndex, 1);
+                changeForceRefresh(forceRefresh + 1);
+              }
+            } else {
+              // alert(await response.text());
             }
-          } else {
-            // alert(await response.text());
-          }
-        }} />
+          }}
+        />
       </Menu>
 
       <input

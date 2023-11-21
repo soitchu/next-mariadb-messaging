@@ -6,7 +6,7 @@ import Markdown from "react-markdown";
 
 function handleClick(event) {
   console.log(event.currentTarget.classList.contains(styles.right));
-  localStorage.setItem("delete-message", (event.currentTarget.dataset.id));
+  localStorage.setItem("delete-message", event.currentTarget.dataset.id);
   openContextMenu(event);
 }
 
@@ -14,12 +14,8 @@ function handleClick(event) {
 export default function Message({ content, time, align, id }) {
   return (
     <div className={styles.message + " " + styles[align]} data-id={id} onContextMenu={handleClick}>
-      <Markdown remarkPlugins={[remarkGfm]}>
-        {content}
-      </Markdown>
-      <div className={styles.time}>
-        {dateToHuman(time)}
-      </div>
+      <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+      <div className={styles.time}>{dateToHuman(time)}</div>
     </div>
   );
 }
