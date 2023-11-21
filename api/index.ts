@@ -9,7 +9,7 @@ function dateToHuman(date: Date) {
 export async function getChats(userId: number) {
     await init();
     const [rows] = await pool.execute(`
-        SELECT c.sender_id, c.unread_count, m.message, u.username, m.created_at 
+        SELECT c.sender_id, c.unread_count, m.message, m.id, u.username, m.created_at 
         FROM Chat c 
              JOIN User u ON (c.sender_id = u.id) 
              JOIN Message m ON (m.id = c.message_id) 

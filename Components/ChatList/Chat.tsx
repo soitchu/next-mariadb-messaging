@@ -52,6 +52,7 @@ export default function Chat(props) {
 
   let fetching = false;
   let newFetching = false;
+  let chatFetching = false;
 
   for (const messageData of props.data) {
     console.log(messageData.recipient_id, props.config.userId);
@@ -104,7 +105,6 @@ export default function Chat(props) {
       console.error(err);
     }
   }
-
 
   async function fetchOldMessages() {
     if (fetching) return;
