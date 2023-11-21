@@ -1,0 +1,47 @@
+.loginCon {
+    width: 300px;
+    margin: auto;
+    text-align: center;
+    z-index: 1;
+
+}
+
+.loginBackground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    background-position: center;
+    background-size: cover;
+    background-image: url("https://images.unsplash.com/photo-1483354483454-4cd359948304?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
+    align-items: center;
+}
+
+.backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    backdrop-filter: blur(5px);
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.inputBox {
+    margin-bottom: 10px;
+}
+
+.button {
+    background-color: black;
+    color: white;
+    margin-top: 10px;
+}
+
+.link {
+    color: white;
+    margin-bottom: 10px;
+    text-decoration: underline;
+    cursor: pointer;
+}

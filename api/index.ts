@@ -53,8 +53,8 @@ export async function getUserInfo(username: string) {
             username
         ]) as RowDataPacket[][];
 
-    if (rows[0].length === 0) {
-        throw new Error("Username not found");
+    if (!rows || !rows[0] || rows[0].length === 0) {
+        return [undefined, undefined];
     } else {
         return [rows[0].hashed_password, rows[0].id];
     }
@@ -149,18 +149,22 @@ export async function sendMessage(recipient_id: number, sender_id: number, conte
 
     const insertId = res[0].insertId;
 
-    await pool.execute(`
+    const ids = [[sender_id, recipient_id], [recipient_id, sender_id]];
+
+    for (const id of ids) {
+        await pool.execute(`
         INSERT INTO Chat 
         VALUES (?, ?, ?, 1) 
         ON DUPLICATE KEY UPDATE 
             message_id =  ?, 
             unread_count = unread_count + 1;`,
-        [
-            sender_id,
-            recipient_id,
-            insertId,
-            insertId,
-        ]);
+            [
+                id[1],
+                id[0],
+                insertId,
+                insertId,
+            ]);
+    }
 
 }
 

@@ -8,19 +8,25 @@ import Chat from '../Components/ChatList/Chat';
 import Custom500 from './500';
 import Custom404 from './404';
 import { getUserIdByCookie } from '../Components/helper';
+import { Login } from '../Components/Auth/Login';
 
 export const getServerSideProps = (async (context) => {
-
   await init();
   const userId = Number(await getUserIdByCookie(context.req.cookies["X-Auth-Token"]));
   const chats = await getChats(userId);
-  const messages = await getMessages(userId, context.query.chat, Infinity);
+  let messages = [];
+
+  try {
+    messages = await getMessages(userId, context.query.chat, Infinity);
+  } catch (err) {
+
+  }
 
   return {
     props: {
       chats,
       messages,
-      chatId: context.query.chat,
+      chatId: context.query.chat ?? -1,
       userId  // Not used for authentication (that'd be a bad idea)
       // It's solely used to align the messages correctly
       // so it isn't a security issue if it's changed on 
@@ -30,14 +36,20 @@ export const getServerSideProps = (async (context) => {
 });
 
 export default function Home(props) {
-  const router = useRouter();
-  if (router.pathname.startsWith("/500")) {
-    return Custom500();
-  }
+  // const router = useRouter();
+  // console.log(router);
+  // if (router.pathname.startsWith("/500")) {
+  //   return Custom500();
+  // }
 
-  if (router.pathname.startsWith("/404")) {
-    return Custom404();
-  }
+  // if (router.pathname.startsWith("/404")) {
+  //   return Custom404();
+  // }
+
+  // if (router.pathname.startsWith("/login")) {
+  //   return Login();
+  // }
+
   return (
     <div style={{
       "height": "100%"
@@ -48,14 +60,16 @@ export default function Home(props) {
       >
       </ChatList>
 
-      <Chat
-        data={...props.messages}
-        config={{
-          chatId: props.chatId,
-          userId: Number(props.userId),
-          scrollToBottom: true
-        }}
-      ></Chat>
+      {props.chatId &&
+        <Chat
+          data={...props.messages}
+          config={{
+            chatId: props.chatId,
+            userId: Number(props.userId),
+            scrollToBottom: true
+          }}
+        ></Chat>
+      }
     </div>
   );
 }

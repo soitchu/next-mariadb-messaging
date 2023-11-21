@@ -47,7 +47,7 @@ export default function Chat(props) {
   const containerElem = useRef(null);
 
   const [oldestId, changeOldestId] = React.useState(props.data[props.data.length - 1]?.id ?? -1);
-  const [newestId, changeNewestId] = React.useState(props.data[0]?.id ?? -1);
+  const [newestId, changeNewestId] = React.useState(props.data[0]?.id ?? 0);
   const [forceRefresh, changeForceRefresh] = React.useState(0);
 
   let fetching = false;
@@ -79,6 +79,7 @@ export default function Chat(props) {
       });
 
       const serverNewestId = (await response.json()).id;
+      console.log(newestId, serverNewestId);
       if (newestId < serverNewestId) {
 
         const newMessages = await (await fetch("/api/getMessages", {

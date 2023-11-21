@@ -10,10 +10,6 @@ interface CardParams {
     unreadCount: number
 }
 
-function handleClick() {
-    console.log(styles);
-}
-
 export default function ChatCard({ username, time, message, id, unreadCount }: CardParams) {
     const router = useRouter();
 

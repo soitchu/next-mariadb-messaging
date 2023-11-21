@@ -14,7 +14,6 @@ export default async function handler(
         const { recipientId, message } = JSON.parse(req.body);
         const userId = await getUserIdByCookie(req.cookies["X-Auth-Token"]);
 
-        console.log("================", userId, req.cookies)
         await sendMessage(recipientId, Number(userId), message);
 
         res.status(200).json({ message: ":D" })

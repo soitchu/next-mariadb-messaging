@@ -18,10 +18,17 @@ export default async function handler(
     try {
         const { username, password } = JSON.parse(req.body);
         const [hashedPassword, userId] = await getUserInfo(username);
+
+        if(!userId) {
+            res.status(401).json({ message: `Incorrect username/password` });
+            return;
+        }
+
         const passwordCheck = await comparePassword(hashedPassword.toString(), password) === true;
 
         if (passwordCheck !== true) {
-            res.status(200).json({ message: "Incorrect username/password" });
+            res.status(401).json({ message: "Incorrect username/password" });
+            return;
         }
 
         const [token, signedCookie] = await genSessionToken();

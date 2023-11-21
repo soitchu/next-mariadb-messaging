@@ -9,12 +9,11 @@ export default async function handler(
     res: NextApiResponse<ResponseData>
 ) {
     try {
-        const { username, password } = req.body;
+        const { username, password } = JSON.parse(req.body);
         const hashedPassword = await hashPassword(password);
 
         await init();
-
-        addUser(username, hashedPassword);
+        await addUser(username, hashedPassword);
 
         res.status(200).json({ message: "Success" });
     } catch (err) {
