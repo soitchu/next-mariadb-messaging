@@ -13,7 +13,7 @@
 }
 
 .messageBox {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     margin: 10px;
     width: calc(100% - 20px);
