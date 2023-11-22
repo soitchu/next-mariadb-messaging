@@ -4,6 +4,7 @@ import { binarySearch, dateToHuman } from "../helperClient";
 import Markdown from "react-markdown";
 import { Menu, Item, Separator, Submenu, useContextMenu } from "react-contexify";
 import "react-contexify/ReactContexify.css";
+import { toast } from "react-toastify";
 
 async function deleteMessage(messageId: string, chatId: string, cb: Function) {
   // @todo toast the error message
@@ -37,7 +38,7 @@ export default function Message({
 
   if (align === "right") {
     const { show } = useContextMenu({
-      id
+      id: `message-${id}`
     });
 
     handleContextMenu = function (event) {
@@ -63,7 +64,7 @@ export default function Message({
         <div className={styles.time}>{dateToHuman(time)}</div>
       </div>
       {align === "right" && (
-        <Menu id={id}>
+        <Menu theme={"dark"} id={`message-${id}`}>
           <Item onClick={() => deleteMessage(id, chatId, deleteFunction)}>Delete</Item>
           <Item onClick={() => setReply(id)}>Reply</Item>
           <Item onClick={() => editMessage(id, content)}>Edit</Item>

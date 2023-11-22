@@ -1,71 +1,77 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap");
 
 .message {
-    padding: 10px 15px;
-    width: auto;
-    color: black;
-    font-family: "Outfit", sans-serif;
-    display: table;
-    background: white;
-    font-size: 20px;
-    min-width: 100px;
-    max-width: 400px;
-    overflow-wrap: anywhere;
-    animation-fill-mode: forwards;
-    animation-duration: 200ms;
-    animation-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  padding: 10px 15px;
+  width: auto;
+  color: black;
+  font-family: "Outfit", sans-serif;
+  display: table;
+  background: white;
+  font-size: 20px;
+  min-width: 100px;
+  max-width: 400px;
+  overflow-wrap: anywhere;
+  animation-fill-mode: forwards;
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .reply {
-    font-size: 0.9em;
-    border-radius: 10px;
-    background-color: #797979;
-    padding: 10px;
-    color: white;
+  font-size: 0.9em;
+  border-radius: 10px;
+  background-color: #797979;
+  padding: 10px;
+  color: white;
 }
-
 
 @keyframes fadeRight {
-    0% {
-        transform: scale(0.8) translate(100px, 0);
-    }
+  0% {
+    transform: scale(0.8) translate(100px, 0);
+  }
 
-    100% {
-        transform: scale(1) translate(0, 0);
-    }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
 }
 
-
 @keyframes fadeLeft {
-    0% {
-        transform: translate(-100px, 0);
-    }
+  0% {
+    transform: translate(-100px, 0);
+  }
 
-    100% {
-        transform: translate(0, 0);
-    }
+  100% {
+    transform: translate(0, 0);
+  }
 }
 
 .message.left {
-    border-radius: 10px 10px 10px 0;
-    margin: 10px 10px;
-    animation-name: fadeLeft;
+  border-radius: 10px 10px 10px 0;
+  margin: 10px 10px;
+  animation-name: fadeLeft;
 }
 
 .message.right {
-    border-radius: 10px 10px 0 10px;
-    margin-left: auto;
-    margin-top: 10px;
-    margin-right: 10px;
-    animation-name: fadeRight;
+  border-radius: 10px 10px 0 10px;
+  margin-left: auto;
+  margin-top: 10px;
+  margin-right: 10px;
+  animation-name: fadeRight;
 }
 
 .message.right .time {
-    text-align: right;
+  text-align: right;
 }
 
 .time {
-    font-size: 0.7em;
-    color: grey;
-    margin-top: 2px;
+  font-size: 0.7em;
+  color: grey;
+  margin-top: 2px;
+}
+
+.contextCon {
+  opacity: 0;
+}
+
+.menuItem {
+  color: black !important;
 }

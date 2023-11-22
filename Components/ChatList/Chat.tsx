@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import styles from "../../styles/Chat.module.css";
 import Message from "./Message";
-import { Menu, MenuItem, openContextMenu } from "../ContextMenu";
 import React from "react";
 import { binarySearch } from "../helperClient";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -235,8 +234,6 @@ export default function Chat(props) {
                 await fetchNewMessages();
               } else {
                 await editMessage(message, props.config.editId, props);
-                // changeForceRefresh(forceRefresh + 1);
-
                 changeEditMode(false);
               }
 
