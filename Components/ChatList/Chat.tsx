@@ -7,7 +7,7 @@ import { binarySearch } from "../helperClient";
 import CancelIcon from "@mui/icons-material/Cancel";
 
 async function sendMessage(message: string, recipientId: number, replyId: number) {
-  if (!message) return;
+  if (!message || !message?.trim()) return;
   const response = await fetch("/api/sendMessage", {
     method: "POST",
     body: JSON.stringify({
@@ -20,24 +20,49 @@ async function sendMessage(message: string, recipientId: number, replyId: number
   if (response.ok) {
     return;
   } else {
+    // @todo toast the error
     throw Error("Could not send the message");
+  }
+}
+
+async function editMessage(message: string, messageId: number, props) {
+  if (!message || !message?.trim()) return;
+  const response = await fetch("/api/editMessage", {
+    method: "POST",
+    body: JSON.stringify({
+      message,
+      messageId
+    })
+  });
+
+  if (response.ok) {
+    const messageIndex = binarySearch(props.data, Number(messageId));
+    if (messageIndex !== -1) {
+      props.data[messageIndex].message = message;
+    }
+    return;
+  } else {
+    // @todo toast the error
+    throw Error("Could not edit the message");
   }
 }
 
 export default function Chat(props) {
   const messageElems = [];
   const containerElem = useRef(null);
+  const inputElem = useRef(null);
 
   const [oldestId, changeOldestId] = React.useState(props.data[props.data.length - 1]?.id ?? -1);
   const [newestId, changeNewestId] = React.useState(props.data[0]?.id ?? 0);
   const [forceRefresh, changeForceRefresh] = React.useState(0);
   const [replyId, changeReplyId] = React.useState(-1);
+  const [editMode, changeEditMode] = React.useState(false);
 
   let fetching = false;
   let newFetching = false;
   let chatFetching = false;
 
-  function deleteMessage(messageId: string) {
+  function deleteMessageCb(messageId: string) {
     const messageIndex = binarySearch(props.data, Number(messageId));
     if (messageIndex !== -1) {
       props.data.splice(messageIndex, 1);
@@ -52,6 +77,12 @@ export default function Chat(props) {
     }
   }
 
+  function editMessageCb(messageId: string, content: string) {
+    changeEditMode(true);
+    props.config.editId = Number(messageId);
+    inputElem.current.value = content;
+  }
+
   for (const messageData of props.data) {
     messageElems.push(
       <Message
@@ -62,8 +93,9 @@ export default function Chat(props) {
         id={messageData.id}
         repliesTo={messageData.reply_message}
         chatId={props.config.chatId}
-        deleteFunction={deleteMessage}
+        deleteFunction={deleteMessageCb}
         setReply={replyTo}
+        editMessage={editMessageCb}
       ></Message>
     );
   }
@@ -173,27 +205,42 @@ export default function Chat(props) {
     <div className={styles.chatCon}>
       {messageContainer}
       <div className={styles.inputCon}>
-        {replyId !== -1 && (
+        {(replyId !== -1 || editMode) && (
           <div className={styles.replying}>
             <CancelIcon
               style={{
                 verticalAlign: "middle"
               }}
               onClick={function () {
-                changeReplyId(-1);
+                if (editMode) {
+                  changeEditMode(false);
+                  inputElem.current.value = "";
+                } else {
+                  changeReplyId(-1);
+                }
               }}
             ></CancelIcon>
-            <div className={styles.replyContent}>Replying to...</div>
+            <div className={styles.replyContent}>{editMode ? "Editing" : "Replying"}</div>
           </div>
         )}
         <input
+          ref={inputElem}
           className={styles.messageBox}
           onKeyDown={async function (event) {
             if (event.key === "Enter" && !event.altKey && !event.ctrlKey && !event.shiftKey) {
               const message = (event.target as HTMLInputElement).value;
-              await sendMessage(message, props.config.chatId, replyId);
+
+              if (!editMode) {
+                await sendMessage(message, props.config.chatId, replyId);
+                await fetchNewMessages();
+              } else {
+                await editMessage(message, props.config.editId, props);
+                // changeForceRefresh(forceRefresh + 1);
+
+                changeEditMode(false);
+              }
+
               (event.target as HTMLInputElement).value = "";
-              await fetchNewMessages();
               changeReplyId(-1);
             }
           }}

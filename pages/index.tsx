@@ -57,6 +57,7 @@ export default function Home(props) {
           config={{
             chatId: props.chatId,
             userId: Number(props.userId),
+            editId: -1,
             scrollToBottom: true
           }}
         ></Chat>

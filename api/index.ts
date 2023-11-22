@@ -28,6 +28,15 @@ export async function getChats(userId: number) {
   return rows;
 }
 
+export async function editMessage(messageId: number, userId: number, message: string) {
+  await pool.execute(
+    `UPDATE Message
+     SET message = ?
+     WHERE id = ? AND sender_id = ?`,
+    [message, messageId, userId]
+  );
+}
+
 export async function addUser(username: string, hashedPassword: string) {
   await pool.execute(
     `

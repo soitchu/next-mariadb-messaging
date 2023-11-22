@@ -30,22 +30,21 @@ export default function Message({
   repliesTo,
   chatId,
   deleteFunction,
-  setReply
+  setReply,
+  editMessage
 }) {
-  function handleClick(event) {
-    // if (!event.currentTarget.classList.contains(styles.right)) return;
-    // localStorage.setItem("delete-message", event.currentTarget.dataset.id);
-    // openContextMenu(event);
-  }
+  let handleContextMenu = (event) => {};
 
-  const { show } = useContextMenu({
-    id
-  });
-
-  function handleContextMenu(event) {
-    show({
-      event
+  if (align === "right") {
+    const { show } = useContextMenu({
+      id
     });
+
+    handleContextMenu = function (event) {
+      show({
+        event
+      });
+    };
   }
 
   return (
@@ -63,10 +62,13 @@ export default function Message({
         <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
         <div className={styles.time}>{dateToHuman(time)}</div>
       </div>
-      <Menu id={id}>
-        <Item onClick={() => deleteMessage(id, chatId, deleteFunction)}>Delete</Item>
-        <Item onClick={() => setReply(id)}>Reply</Item>
-      </Menu>
+      {align === "right" && (
+        <Menu id={id}>
+          <Item onClick={() => deleteMessage(id, chatId, deleteFunction)}>Delete</Item>
+          <Item onClick={() => setReply(id)}>Reply</Item>
+          <Item onClick={() => editMessage(id, content)}>Edit</Item>
+        </Menu>
+      )}
     </>
   );
 }
