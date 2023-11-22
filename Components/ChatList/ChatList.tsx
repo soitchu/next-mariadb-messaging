@@ -50,7 +50,6 @@ export default function ChatList(props) {
     const id = setInterval(fetchChats, 3000);
 
     return () => {
-      console.log("clearedd");
       clearInterval(id);
     };
   }, [forceRefresh]);

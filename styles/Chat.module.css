@@ -1,28 +1,42 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap");
 
-.chatCon { 
-    max-width: 100%;
-    width: calc(100% - 400px);
-    background-color: #292929;
-    height: 100%;
-    position: absolute;
-    right: 0;
-    top: 0;
-    overflow: hidden;
-    overflow-y: auto;
+.chatCon {
+  max-width: 100%;
+  width: calc(100% - 400px);
+  background-color: #292929;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overflow-y: auto;
 }
 
 .messageBox {
-    position: absolute;
-    bottom: 0;
-    margin: 10px;
-    width: calc(100% - 20px);
-    border: 0;
-    outline: none;
-    height: 50px;
-    font-size: 20px;
-    padding: 10px;
-    box-sizing: border-box;
-    font-family: "Outfit", sans-serif;
-    border-radius: 10px;
+  margin: 10px;
+  border: 0;
+  outline: none;
+  height: 50px;
+  width: 100%;
+  font-size: 20px;
+  padding: 10px;
+  box-sizing: border-box;
+  font-family: "Outfit", sans-serif;
+  border-radius: 10px;
+}
+
+.inputCon {
+  width: calc(100% - 20px);
+}
+
+.replying {
+  color: white;
+  margin-left: 10px;
+}
+.replyContent {
+  display: inline-block;
+  margin-left: 10px;
+  vertical-align: middle;
 }

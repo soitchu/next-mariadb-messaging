@@ -3,14 +3,17 @@ import styles from "../../styles/Chat.module.css";
 import Message from "./Message";
 import { Menu, MenuItem, openContextMenu } from "../ContextMenu";
 import React from "react";
+import { binarySearch } from "../helperClient";
+import CancelIcon from "@mui/icons-material/Cancel";
 
-async function sendMessage(message: string, recipientId: number) {
+async function sendMessage(message: string, recipientId: number, replyId: number) {
   if (!message) return;
   const response = await fetch("/api/sendMessage", {
     method: "POST",
     body: JSON.stringify({
       message,
-      recipientId
+      recipientId,
+      replyId
     })
   });
 
@@ -21,26 +24,6 @@ async function sendMessage(message: string, recipientId: number) {
   }
 }
 
-function binarySearch(data, val) {
-  let start = 0;
-  let end = data.length - 1;
-
-  while (start <= end) {
-    let mid = Math.floor((start + end) / 2);
-    console.log(data[mid].id, val);
-    if (data[mid].id === val) {
-      return mid;
-    }
-
-    if (val > data[mid].id) {
-      end = mid - 1;
-    } else {
-      start = mid + 1;
-    }
-  }
-  return -1;
-}
-
 export default function Chat(props) {
   const messageElems = [];
   const containerElem = useRef(null);
@@ -48,13 +31,28 @@ export default function Chat(props) {
   const [oldestId, changeOldestId] = React.useState(props.data[props.data.length - 1]?.id ?? -1);
   const [newestId, changeNewestId] = React.useState(props.data[0]?.id ?? 0);
   const [forceRefresh, changeForceRefresh] = React.useState(0);
+  const [replyId, changeReplyId] = React.useState(-1);
 
   let fetching = false;
   let newFetching = false;
   let chatFetching = false;
 
+  function deleteMessage(messageId: string) {
+    const messageIndex = binarySearch(props.data, Number(messageId));
+    if (messageIndex !== -1) {
+      props.data.splice(messageIndex, 1);
+      changeForceRefresh(forceRefresh + 1);
+    }
+  }
+
+  function replyTo(messageId: string) {
+    const messageIdNum = Number(messageId);
+    if (!isNaN(replyId)) {
+      changeReplyId(messageIdNum);
+    }
+  }
+
   for (const messageData of props.data) {
-    console.log(messageData.recipient_id, props.config.userId);
     messageElems.push(
       <Message
         key={messageData.id}
@@ -62,6 +60,10 @@ export default function Chat(props) {
         align={messageData.recipient_id === props.config.userId ? "left" : "right"}
         time={messageData.created_at}
         id={messageData.id}
+        repliesTo={messageData.reply_message}
+        chatId={props.config.chatId}
+        deleteFunction={deleteMessage}
+        setReply={replyTo}
       ></Message>
     );
   }
@@ -79,7 +81,6 @@ export default function Chat(props) {
       });
 
       const serverNewestId = (await response.json()).id;
-      console.log(newestId, serverNewestId);
       if (newestId < serverNewestId) {
         const newMessages = await (
           await fetch("/api/getMessages", {
@@ -129,7 +130,7 @@ export default function Chat(props) {
   const messageContainer = (
     <div
       style={{
-        height: "calc(100% - 60px)",
+        height: "100%",
         overflowY: "auto",
         overflowX: "hidden"
       }}
@@ -164,7 +165,6 @@ export default function Chat(props) {
     }
 
     return () => {
-      console.log("cleared");
       clearInterval(id);
     };
   }, [messageElems.length]);
@@ -172,46 +172,33 @@ export default function Chat(props) {
   return (
     <div className={styles.chatCon}>
       {messageContainer}
-
-      <Menu>
-        <MenuItem
-          label="Delete"
-          onClick={async function (event) {
-            const messageId = localStorage.getItem("delete-message");
-
-            const response = await fetch("/api/deleteMessage", {
-              method: "POST",
-              body: JSON.stringify({
-                messageId,
-                recipientId: props.config.chatId
-              })
-            });
-
-            if (response.ok) {
-              const messageIndex = binarySearch(props.data, Number(messageId));
-
-              if (messageIndex !== -1) {
-                props.data.splice(messageIndex, 1);
-                changeForceRefresh(forceRefresh + 1);
-              }
-            } else {
-              // alert(await response.text());
+      <div className={styles.inputCon}>
+        {replyId !== -1 && (
+          <div className={styles.replying}>
+            <CancelIcon
+              style={{
+                verticalAlign: "middle"
+              }}
+              onClick={function () {
+                changeReplyId(-1);
+              }}
+            ></CancelIcon>
+            <div className={styles.replyContent}>Replying to...</div>
+          </div>
+        )}
+        <input
+          className={styles.messageBox}
+          onKeyDown={async function (event) {
+            if (event.key === "Enter" && !event.altKey && !event.ctrlKey && !event.shiftKey) {
+              const message = (event.target as HTMLInputElement).value;
+              await sendMessage(message, props.config.chatId, replyId);
+              (event.target as HTMLInputElement).value = "";
+              await fetchNewMessages();
+              changeReplyId(-1);
             }
           }}
-        />
-      </Menu>
-
-      <input
-        className={styles.messageBox}
-        onKeyDown={async function (event) {
-          if (event.key === "Enter" && !event.altKey && !event.ctrlKey && !event.shiftKey) {
-            const message = (event.target as HTMLInputElement).value;
-            await sendMessage(message, props.config.chatId);
-            (event.target as HTMLInputElement).value = "";
-            await fetchNewMessages();
-          }
-        }}
-      ></input>
+        ></input>
+      </div>
     </div>
   );
 }

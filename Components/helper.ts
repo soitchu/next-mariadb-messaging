@@ -8,7 +8,6 @@ import { getUserIdByToken } from "../api";
 const cookieSecret = process.env.COOKIE_SECRET;
 
 export async function hashPassword(password: string) {
-  console.log(password);
   return await Bcrypt.hash(password, 10);
 }
 
@@ -31,10 +30,6 @@ export async function getUserIdByCookie(cookieString: string) {
   if (!token) {
     throw new Error("Invalid token.");
   }
-
-  console.log(token);
-
-  console.log(await getUserIdByToken(token));
 
   return await getUserIdByToken(token);
 }

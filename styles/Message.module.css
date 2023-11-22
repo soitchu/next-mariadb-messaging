@@ -9,12 +9,21 @@
     background: white;
     font-size: 20px;
     min-width: 100px;
-    max-width: calc(100% - 30px);
+    max-width: 400px;
     overflow-wrap: anywhere;
     animation-fill-mode: forwards;
     animation-duration: 200ms;
     animation-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
+
+.reply {
+    font-size: 0.9em;
+    border-radius: 10px;
+    background-color: #797979;
+    padding: 10px;
+    color: white;
+}
+
 
 @keyframes fadeRight {
     0% {
@@ -51,6 +60,9 @@
     animation-name: fadeRight;
 }
 
+.message.right .time {
+    text-align: right;
+}
 
 .time {
     font-size: 0.7em;

@@ -1,5 +1,7 @@
+DROP TABLE IF EXISTS Replies;
 DROP TABLE IF EXISTS Chat;
 DROP TABLE IF EXISTS Message;
+DROP TABLE IF EXISTS Session;
 DROP TABLE IF EXISTS User;
 
 CREATE TABLE User(
@@ -10,9 +12,10 @@ CREATE TABLE User(
 );
 
 CREATE TABLE Session(
-    id CHAR(128) AUTO_INCREMENT,
+    id CHAR(128),
     user_agent TEXT,
     user_id BIGINT,
+    FOREIGN KEY (user_id) REFERENCES User(id),
     PRIMARY KEY(id)
 );
 
@@ -34,6 +37,14 @@ CREATE TABLE Chat(
     FOREIGN KEY (sender_id) REFERENCES User(id),
     FOREIGN KEY (recipient_id) REFERENCES User(id),
     FOREIGN KEY (message_id) REFERENCES Message(id)
+);
+
+CREATE TABLE Replies(
+    message_id BIGINT NOT NULL,
+    replies_to  BIGINT NOT NULL,
+    PRIMARY KEY(message_id),
+    FOREIGN KEY (message_id) REFERENCES Message(id) ON DELETE CASCADE,
+    FOREIGN KEY (replies_to) REFERENCES Message(id) ON DELETE CASCADE
 );
 
 INSERT INTO User VALUES(1, "user1", "");
