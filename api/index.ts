@@ -16,7 +16,7 @@ export async function getChats(userId: number) {
           m.message, 
           m.id, 
           u.username, 
-          m.created_at,
+          c.created_at,
           FALSE as is_group
         FROM Chat c
             JOIN User u ON (c.sender_id = u.id)
@@ -31,12 +31,12 @@ export async function getChats(userId: number) {
           m.message, 
           m.id, 
           g.name as username, 
-          m.created_at,
+          gc.created_at,
           TRUE as is_group
         FROM Group_chat gc 
-             JOIN User_group g ON (g.id = gc.id)
+             JOIN User_group g ON (g.id = gc.group_id)
              JOIN Group_member gm ON (gm.group_id = g.id AND gm.user_id = ?)
-             JOIN Group_message m ON (m.id = gc.message_id)
+             LEFT JOIN Group_message m ON (m.id = gc.message_id)
              
         ORDER BY created_at DESC`,
     [userId, userId]
@@ -340,8 +340,10 @@ export async function sendMessage(
 
     await pool.execute(
       `UPDATE Group_chat 
-       SET message_id = ?
-       WHERE id = ?;`,
+       SET 
+         message_id = ?,
+         created_at = UTC_TIMESTAMP()
+       WHERE group_id = ?;`,
       [insertId, recipient_id]
     );
 
@@ -392,9 +394,11 @@ export async function sendMessage(
     await pool.execute(
       `
         INSERT INTO Chat 
+        (recipient_id, sender_id, message_id, unread_count)
         VALUES (?, ?, ?, 1) 
         ON DUPLICATE KEY UPDATE 
             message_id =  ?, 
+            created_at = UTC_TIMESTAMP(),
             unread_count = unread_count + 1;`,
       [id[1], id[0], insertId, insertId]
     );

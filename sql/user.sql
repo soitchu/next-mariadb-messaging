@@ -20,7 +20,7 @@ CREATE TABLE Session(
     id CHAR(128),
     user_agent TEXT,
     user_id BIGINT,
-    FOREIGN KEY (user_id) REFERENCES User(id),
+    FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE,
     PRIMARY KEY(id)
 );
 
@@ -40,6 +40,7 @@ CREATE TABLE Chat(
     sender_id BIGINT NOT NULL,
     message_id BIGINT NOT NULL,
     unread_count INT DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
     PRIMARY KEY(recipient_id, sender_id),
     FOREIGN KEY (sender_id) REFERENCES User(id),
     FOREIGN KEY (recipient_id) REFERENCES User(id),
@@ -70,6 +71,13 @@ CREATE TABLE Group_member(
     FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
 );
 
+
+-- Here, setting FOREIGN KEY (group_id, sender_id) REFERENCES Group_member(group_id, user_id)
+-- Would have been better, since that'd ensure that the message that are being sent are 
+-- by members of the group, but this would make it so the members can't leave
+-- the group, and would add a lot of complexity. So it's probably better to 
+-- just set separate foreign keys
+
 CREATE TABLE Group_message(
     id BIGINT AUTO_INCREMENT NOT NULL,
     sender_id BIGINT NOT NULL,
@@ -77,15 +85,25 @@ CREATE TABLE Group_message(
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
     PRIMARY KEY(id),
-    FOREIGN KEY (group_id, sender_id) REFERENCES Group_member(group_id, user_id)
+    FOREIGN KEY (group_id) REFERENCES Group_member(group_id),
+    FOREIGN KEY (sender_id) REFERENCES User(id)
 );
 
+
+-- Using NULL is better for message_id since it'd make the group
+-- chat pop up on users' chat list, even if no message has been sent
+
+-- Also, storing `created_at` is redundant, but this is useful if all
+-- of the messages have been deleted, and we still want to sort the chat
+-- list by time at which the last message that was sent
+
 CREATE TABLE Group_chat(
-    id BIGINT NOT NULL,
+    group_id BIGINT NOT NULL,
     message_id BIGINT NULL,
-    PRIMARY KEY(id),
-    FOREIGN KEY (id) REFERENCES User_group(id) ON DELETE CASCADE,
-    FOREIGN KEY (message_id) REFERENCES Group_message(id)
+    created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
+    PRIMARY KEY(group_id),
+    FOREIGN KEY (group_id) REFERENCES User_group(id) ON DELETE CASCADE,
+    FOREIGN KEY (message_id) REFERENCES Group_message(id) ON DELETE SET NULL
 );
 
 CREATE TABLE Group_replies(
@@ -102,14 +120,14 @@ INSERT INTO User VALUES(3, "user3", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.Y
 
 INSERT INTO Message (id, recipient_id, sender_id, message) VALUES(1, 1, 1, "");
 INSERT INTO Message (recipient_id, sender_id, message) VALUES(1, 2, "Hi :D");
-INSERT INTO Chat VALUES(1, 2, LAST_INSERT_ID(), 0);
-INSERT INTO Chat VALUES(2, 1, LAST_INSERT_ID(), 0);
+INSERT INTO Chat (recipient_id, sender_id, message_id, unread_count) VALUES(1, 2, LAST_INSERT_ID(), 0);
+INSERT INTO Chat (recipient_id, sender_id, message_id, unread_count) VALUES(2, 1, LAST_INSERT_ID(), 0);
 
 INSERT INTO Message (recipient_id, sender_id, message) VALUES(2, 1, "Hello!");
 
 INSERT INTO User_group (name) VALUES("test group");
-INSERT INTO Group_member VALUES(1, 1);
-INSERT INTO Group_member VALUES(1, 2);
-INSERT INTO Group_message (sender_id, group_id, message) VALUES(2, 1, "Hello :)");
-INSERT INTO Group_chat (id, message_id) VALUES(1, 1);
+INSERT INTO Group_member VALUES(1, 1, 0);
+INSERT INTO Group_member VALUES(1, 2, 0);
+INSERT INTO Group_message (sender_id, group_id, message) VALUES(1, 1, "Hello :)");
+INSERT INTO Group_chat (group_id, message_id) VALUES(1, 1);
 
