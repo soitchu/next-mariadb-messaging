@@ -58,8 +58,10 @@ CREATE TABLE Replies(
 -- Can't just use `Group` as the name
 CREATE TABLE User_group(
     id BIGINT AUTO_INCREMENT NOT NULL,
+    owner_id BIGINT NOT NULL,
     name TEXT NOT NULL,
-    PRIMARY KEY(id)
+    PRIMARY KEY(id),
+    FOREIGN KEY (owner_id) REFERENCES User(id)
 );
 
 CREATE TABLE Group_member(
@@ -125,7 +127,7 @@ INSERT INTO Chat (recipient_id, sender_id, message_id, unread_count) VALUES(2, 1
 
 INSERT INTO Message (recipient_id, sender_id, message) VALUES(2, 1, "Hello!");
 
-INSERT INTO User_group (name) VALUES("test group");
+INSERT INTO User_group (name, owner_id) VALUES("test group", 1);
 INSERT INTO Group_member VALUES(1, 1, 0);
 INSERT INTO Group_member VALUES(1, 2, 0);
 INSERT INTO Group_message (sender_id, group_id, message) VALUES(1, 1, "Hello :)");

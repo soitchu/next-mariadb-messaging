@@ -52,6 +52,28 @@ export async function getChats(userId: number) {
   return rows;
 }
 
+export async function createGroup(userId: number, name: string) {
+  const [row] = (await pool.execute(
+    `INSERT INTO User_group (name, owner_id)
+      VALUES (?, ?)`,
+    [name, userId]
+  )) as RowDataPacket[];
+
+  const groupId = row.insertId;
+
+  await pool.execute(
+    `INSERT INTO Group_chat (group_id)
+      VALUES (?)`,
+    [groupId]
+  );
+
+  await pool.execute(
+    `INSERT INTO Group_member (group_id, user_id, unread_count)
+      VALUES (?, ?, ?)`,
+    [groupId, userId, 0]
+  );
+}
+
 export async function editMessage(
   messageId: number,
   userId: number,
@@ -281,7 +303,6 @@ export async function getMessages(
       [recipientId, senderId]
     );
 
-    // console.log(rows);
     return rows;
   }
 

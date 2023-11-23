@@ -85,7 +85,6 @@ export default function Chat(props) {
     inputElem.current.value = content;
   }
 
-  console.log(props.data);
   const isGroup = props.config.isGroup;
 
   for (const messageData of props.data) {

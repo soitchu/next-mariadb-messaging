@@ -1,8 +1,40 @@
-.chatListCon { 
-    max-width: 100%;
-    width: 400px;
-    background-color: #e2e2e2;
-    height: 100%;
-    overflow: hidden;
-    overflow-y: scroll;
+.chatListCon {
+  max-width: 100%;
+  width: 400px;
+  background-color: #e2e2e2;
+  height: 100%;
+  overflow: hidden;
+  overflow-y: auto;
+}
+
+.topIcon {
+  display: inline-block;
+  margin: 10px;
+  cursor: pointer;
+}
+
+.createGroup {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 10, 20, 0.1);
+  transform: translate(10px, 50px) !important;
+  left: 100px;
+  top: 100px;
+}
+
+.createGroupButton {
+  margin-top: 10px;
+  background-color: black;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.createGroupTextarea {
+  background-color: #3c1d1d;
+  color: white;
+  padding: 10px;
+  outline: none;
+  border-radius: 10px;
 }
