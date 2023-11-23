@@ -10,9 +10,10 @@ export const getServerSideProps = async (context) => {
   const userId = Number(await getUserIdByCookie(context.req.cookies["X-Auth-Token"]));
   const chats = await getChats(userId);
   let messages = [];
+  const isGroup = context.query.isGroup === "true";
 
   try {
-    messages = await getMessages(userId, context.query.chat, Infinity);
+    messages = await getMessages(userId, context.query.chat, Infinity, false, isGroup);
   } catch (err) {}
 
   return {
@@ -20,6 +21,7 @@ export const getServerSideProps = async (context) => {
       chats,
       messages,
       chatId: context.query.chat ?? -1,
+      isGroup,
       userId // Not used for authentication (that'd be a bad idea)
       // It's solely used to align the messages correctly
       // so it isn't a security issue if it's changed on
@@ -58,6 +60,7 @@ export default function Home(props) {
             chatId: props.chatId,
             userId: Number(props.userId),
             editId: -1,
+            isGroup: props.isGroup,
             scrollToBottom: true
           }}
         ></Chat>

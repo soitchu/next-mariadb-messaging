@@ -24,7 +24,7 @@ export default function Login() {
         toast("Logged in! Redirecting...");
 
         setTimeout(() => {
-          window.location.href = "/chat";
+          window.location.href = "/";
         }, 2000);
       } else {
         toast((await response.json()).message);

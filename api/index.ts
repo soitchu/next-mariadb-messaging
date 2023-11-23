@@ -9,26 +9,64 @@ function dateToHuman(date: Date) {
 export async function getChats(userId: number) {
   await init();
   const [rows] = (await pool.execute(
-    `
-        SELECT c.sender_id, c.unread_count, m.message, m.id, u.username, m.created_at 
-        FROM Chat c 
-             JOIN User u ON (c.sender_id = u.id) 
-             LEFT JOIN Message m ON (m.id = c.message_id) 
-        WHERE c.recipient_id = ? 
-        ORDER BY m.created_at DESC`,
-    [userId]
+    `    
+        SELECT 
+          c.sender_id, 
+          c.unread_count, 
+          m.message, 
+          m.id, 
+          u.username, 
+          m.created_at,
+          FALSE as is_group
+        FROM Chat c
+            JOIN User u ON (c.sender_id = u.id)
+            LEFT JOIN Message m ON (m.id = c.message_id)
+        WHERE c.recipient_id = ?
+
+        UNION
+        
+        SELECT 
+          g.id as sender_id, 
+          gm.unread_count,
+          m.message, 
+          m.id, 
+          g.name as username, 
+          m.created_at,
+          TRUE as is_group
+        FROM Group_chat gc 
+             JOIN User_group g ON (g.id = gc.id)
+             JOIN Group_member gm ON (gm.group_id = g.id AND gm.user_id = ?)
+             JOIN Group_message m ON (m.id = gc.message_id)
+             
+        ORDER BY created_at DESC`,
+    [userId, userId]
   )) as RowDataPacket[][];
 
   for (const row of rows) {
     if (row.created_at) {
-      row.created_at = dateToHuman(row.created_at);
+      // row.created_at = dateToHuman(row.created_at);
+      row.created_at = dateToHuman(new Date(row.created_at));
     }
   }
 
   return rows;
 }
 
-export async function editMessage(messageId: number, userId: number, message: string) {
+export async function editMessage(
+  messageId: number,
+  userId: number,
+  message: string,
+  isGroup: boolean
+) {
+  if (isGroup) {
+    await pool.execute(
+      `UPDATE Group_message
+       SET message = ?
+       WHERE id = ? AND sender_id = ?`,
+      [message, messageId, userId]
+    );
+    return;
+  }
   await pool.execute(
     `UPDATE Message
      SET message = ?
@@ -87,7 +125,23 @@ export async function getUserIdByToken(token: string) {
   }
 }
 
-export async function deleteMessage(messageId: number, senderId: number, recipientId: number) {
+export async function deleteGroupMessage(messageId: number, senderId: number, groupId: number) {
+  await pool.execute(`DELETE FROM Group_message where id = ? AND sender_id = ?`, [
+    messageId,
+    senderId
+  ]);
+}
+export async function deleteMessage(
+  messageId: number,
+  senderId: number,
+  recipientId: number,
+  isGroup: boolean
+) {
+  if (isGroup) {
+    deleteGroupMessage(messageId, senderId, recipientId);
+    return;
+  }
+
   const [rows] = (await pool.execute(
     `SELECT * FROM Message m
       WHERE (
@@ -99,7 +153,6 @@ export async function deleteMessage(messageId: number, senderId: number, recipie
     [senderId, recipientId, recipientId, senderId]
   )) as RowDataPacket[][];
 
-  console.log(rows, messageId);
   if (rows[0].id === messageId) {
     if (rows.length === 1) {
       // Since there's only one message, we can delete off
@@ -131,8 +184,34 @@ export async function deleteMessage(messageId: number, senderId: number, recipie
   await pool.execute(`DELETE FROM Message where id = ? AND sender_id = ?`, [messageId, senderId]);
 }
 
-export async function getLastId(sender_id: number, recipient_id: number): Promise<number> {
+export async function getLastId(
+  sender_id: number,
+  recipient_id: number,
+  isGroup: boolean
+): Promise<number> {
   await init();
+
+  if (isGroup) {
+    const userInGroup = await isUserInGroup(recipient_id, sender_id);
+    if (userInGroup !== true) return;
+
+    const [rows] = (await pool.execute(
+      `   
+      SELECT m.id FROM 
+        Group_message m
+      WHERE m.group_id = ?
+      ORDER BY m.id DESC 
+      LIMIT 1`,
+      [sender_id]
+    )) as RowDataPacket[];
+
+    if (rows.length === 0) {
+      return -1;
+    } else {
+      return rows[0].id;
+    }
+  }
+
   const [rows] = (await pool.execute(
     `
         SELECT m.id 
@@ -140,7 +219,8 @@ export async function getLastId(sender_id: number, recipient_id: number): Promis
              JOIN User u ON (c.sender_id = u.id) 
              JOIN Message m ON (m.id = c.message_id) 
         WHERE c.recipient_id = ? AND c.sender_id = ?
-        ORDER BY m.created_at DESC`,
+        ORDER BY m.created_at DESC
+        LIMIT 1`,
     [recipient_id, sender_id]
   )) as RowDataPacket[];
 
@@ -151,13 +231,60 @@ export async function getLastId(sender_id: number, recipient_id: number): Promis
   }
 }
 
+async function isUserInGroup(userId: number, groupId: number) {
+  const [rows] = await pool.execute(
+    `
+    SELECT 1
+    FROM Group_member
+    WHERE group_id = ? AND user_id = ?;`,
+    [groupId, userId]
+  );
+
+  return rows.length > 0;
+}
+
 export async function getMessages(
   senderId: number,
   recipientId: number,
   lastId = -1,
-  greater = false
+  greater = false,
+  isGroup: boolean
 ) {
   const condition = greater ? `m.id > ?` : `m.id < ?`;
+
+  if (isGroup) {
+    const userInGroup = await isUserInGroup(senderId, recipientId);
+    if (userInGroup !== true) return;
+
+    const [rows] = await pool.execute(
+      `
+      SELECT m.*, u.username, m1.message as reply_message FROM 
+        Group_replies r
+        JOIN Group_message m1 ON (m1.id = r.replies_to)
+        RIGHT JOIN Group_message m ON (r.message_id = m.id)
+        JOIN User u ON (m.sender_id = u.id)
+      WHERE m.group_id = ?
+            AND ${condition}
+      ORDER BY m.id DESC 
+      ${!greater ? "LIMIT 10" : ""}`,
+      [recipientId, lastId === -1 ? Infinity : lastId]
+    );
+
+    for (const row of rows) {
+      row.created_at = dateToHuman(row.created_at);
+    }
+
+    await pool.execute(
+      `UPDATE Group_member
+      SET unread_count = 0
+      WHERE group_id = ? AND user_id = ?;`,
+      [recipientId, senderId]
+    );
+
+    // console.log(rows);
+    return rows;
+  }
+
   const [rows] = await pool.execute(
     `
         SELECT m.created_at, m.id, m.message, m.sender_id, m.recipient_id, m1.message as reply_message FROM 
@@ -189,9 +316,62 @@ export async function sendMessage(
   recipient_id: number,
   sender_id: number,
   content: string,
-  replyId: number
+  replyId: number,
+  isGroup: boolean
 ) {
   await init();
+
+  if (isGroup === true) {
+    // We don't need to check if the user is in the group
+    // because foreign key constraints take care of that
+    // for us. We it would probably be better to check
+    // that regardless, to make sure the error message
+    // is more readable
+
+    const res = (await pool.execute(
+      `
+          INSERT INTO Group_message 
+              (sender_id, group_id, message)
+              VALUES(?, ?, ?);`,
+      [sender_id, recipient_id, content]
+    )) as RowDataPacket[];
+
+    const insertId = res[0].insertId;
+
+    await pool.execute(
+      `UPDATE Group_chat 
+       SET message_id = ?
+       WHERE id = ?;`,
+      [insertId, recipient_id]
+    );
+
+    await pool.execute(
+      `UPDATE Group_member
+      SET unread_count = unread_count + 1
+      WHERE group_id = ?;`,
+      [recipient_id]
+    );
+
+    if (replyId !== -1 && typeof replyId === "number") {
+      // Making sure the message that's being replied to
+      // was sent in the right group chat
+
+      const [rows] = (await pool.execute(
+        `SELECT * FROM Group_message 
+          WHERE id = ?`,
+        [replyId]
+      )) as RowDataPacket[][];
+
+      if (rows.length === 0) return;
+
+      if (rows[0].group_id === recipient_id) {
+        await pool.execute(`INSERT INTO Group_replies VALUES(?, ?);`, [insertId, replyId]);
+      } else {
+        throw new Error("Forbidden reply");
+      }
+    }
+    return;
+  }
 
   const res = await pool.execute(
     `

@@ -1,3 +1,8 @@
+DROP TABLE IF EXISTS Group_replies;
+DROP TABLE IF EXISTS Group_chat;
+DROP TABLE IF EXISTS Group_message;
+DROP TABLE IF EXISTS Group_member;
+DROP TABLE IF EXISTS User_group;
 DROP TABLE IF EXISTS Replies;
 DROP TABLE IF EXISTS Chat;
 DROP TABLE IF EXISTS Message;
@@ -25,6 +30,8 @@ CREATE TABLE Message(
     sender_id BIGINT NOT NULL,
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
+    FOREIGN KEY (sender_id) REFERENCES User(id),
+    FOREIGN KEY (recipient_id) REFERENCES User(id),
     PRIMARY KEY(id)
 );
 
@@ -47,9 +54,51 @@ CREATE TABLE Replies(
     FOREIGN KEY (replies_to) REFERENCES Message(id) ON DELETE CASCADE
 );
 
-INSERT INTO User VALUES(1, "user1", "");
-INSERT INTO User VALUES(2, "user2", "");
-INSERT INTO User VALUES(3, "user3", "");
+-- Can't just use `Group` as the name
+CREATE TABLE User_group(
+    id BIGINT AUTO_INCREMENT NOT NULL,
+    name TEXT NOT NULL,
+    PRIMARY KEY(id)
+);
+
+CREATE TABLE Group_member(
+    group_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    unread_count INT DEFAULT 0 NOT NULL,
+    PRIMARY KEY(group_id, user_id),
+    FOREIGN KEY (group_id) REFERENCES User_group(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+);
+
+CREATE TABLE Group_message(
+    id BIGINT AUTO_INCREMENT NOT NULL,
+    sender_id BIGINT NOT NULL,
+    group_id BIGINT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
+    PRIMARY KEY(id),
+    FOREIGN KEY (group_id, sender_id) REFERENCES Group_member(group_id, user_id)
+);
+
+CREATE TABLE Group_chat(
+    id BIGINT NOT NULL,
+    message_id BIGINT NULL,
+    PRIMARY KEY(id),
+    FOREIGN KEY (id) REFERENCES User_group(id) ON DELETE CASCADE,
+    FOREIGN KEY (message_id) REFERENCES Group_message(id)
+);
+
+CREATE TABLE Group_replies(
+    message_id BIGINT NOT NULL,
+    replies_to  BIGINT NOT NULL,
+    PRIMARY KEY(message_id),
+    FOREIGN KEY (message_id) REFERENCES Group_message(id) ON DELETE CASCADE,
+    FOREIGN KEY (replies_to) REFERENCES Group_message(id) ON DELETE CASCADE
+);
+
+INSERT INTO User VALUES(1, "user1", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm");
+INSERT INTO User VALUES(2, "user2", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm");
+INSERT INTO User VALUES(3, "user3", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm");
 
 INSERT INTO Message (id, recipient_id, sender_id, message) VALUES(1, 1, 1, "");
 INSERT INTO Message (recipient_id, sender_id, message) VALUES(1, 2, "Hi :D");
@@ -58,5 +107,9 @@ INSERT INTO Chat VALUES(2, 1, LAST_INSERT_ID(), 0);
 
 INSERT INTO Message (recipient_id, sender_id, message) VALUES(2, 1, "Hello!");
 
-
+INSERT INTO User_group (name) VALUES("test group");
+INSERT INTO Group_member VALUES(1, 1);
+INSERT INTO Group_member VALUES(1, 2);
+INSERT INTO Group_message (sender_id, group_id, message) VALUES(2, 1, "Hello :)");
+INSERT INTO Group_chat (id, message_id) VALUES(1, 1);
 

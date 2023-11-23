@@ -58,7 +58,10 @@ export default function ChatList(props) {
   return (
     <Flipper flipKey={props.data.map((x) => x.sender_id).join(",")} className={styles.chatListCon}>
       {props.data.map((chatData) => (
-        <Flipped key={chatData.sender_id} flipId={chatData.sender_id}>
+        <Flipped
+          key={`${chatData.is_group}-${chatData.sender_id}`}
+          flipId={`${chatData.is_group}-${chatData.sender_id}`}
+        >
           <div>
             <ChatCard
               id={chatData.sender_id}
@@ -66,6 +69,7 @@ export default function ChatList(props) {
               time={chatData.created_at}
               message={chatData.message}
               unreadCount={chatData.unread_count}
+              isGroup={chatData.is_group}
             ></ChatCard>
           </div>
         </Flipped>

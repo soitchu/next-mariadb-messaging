@@ -8,9 +8,9 @@ type ResponseData = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   try {
-    const { messageId, message } = JSON.parse(req.body);
+    const { messageId, message, isGroup } = JSON.parse(req.body);
     const userId = await getUserIdByCookie(req.cookies["X-Auth-Token"]);
-    await editMessage(Number(messageId), Number(userId), message);
+    await editMessage(Number(messageId), Number(userId), message, isGroup);
 
     res.status(200).json({ message: ":D" });
   } catch (err) {

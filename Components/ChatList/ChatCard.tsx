@@ -8,16 +8,26 @@ interface CardParams {
   message: string;
   id: string;
   unreadCount: number;
+  isGroup: 1 | 0;
 }
 
-export default function ChatCard({ username, time, message, id, unreadCount }: CardParams) {
-  const router = useRouter();
-
+export default function ChatCard({
+  username,
+  time,
+  message,
+  id,
+  unreadCount,
+  isGroup
+}: CardParams) {
   return (
     <div
       className={styles.card}
       onClick={() => {
-        window.history.pushState({}, undefined, `?chat=${id}`);
+        if (isGroup === 1) {
+          window.history.pushState({}, undefined, `?chat=${id}&isGroup=true`);
+        } else {
+          window.history.pushState({}, undefined, `?chat=${id}`);
+        }
         window.location.reload();
       }}
     >

@@ -5,14 +5,16 @@ import React from "react";
 import { binarySearch } from "../helperClient";
 import CancelIcon from "@mui/icons-material/Cancel";
 
-async function sendMessage(message: string, recipientId: number, replyId: number) {
+async function sendMessage(message: string, recipientId: number, replyId: number, isGroup: number) {
   if (!message || !message?.trim()) return;
+
   const response = await fetch("/api/sendMessage", {
     method: "POST",
     body: JSON.stringify({
       message,
       recipientId,
-      replyId
+      replyId,
+      isGroup
     })
   });
 
@@ -24,13 +26,14 @@ async function sendMessage(message: string, recipientId: number, replyId: number
   }
 }
 
-async function editMessage(message: string, messageId: number, props) {
+async function editMessage(message: string, messageId: number, isGroup: boolean, props) {
   if (!message || !message?.trim()) return;
   const response = await fetch("/api/editMessage", {
     method: "POST",
     body: JSON.stringify({
       message,
-      messageId
+      messageId,
+      isGroup
     })
   });
 
@@ -82,12 +85,25 @@ export default function Chat(props) {
     inputElem.current.value = content;
   }
 
+  console.log(props.data);
+  const isGroup = props.config.isGroup;
+
   for (const messageData of props.data) {
+    // @todo refactor this abomination
     messageElems.push(
       <Message
         key={messageData.id}
         content={messageData.message}
-        align={messageData.recipient_id === props.config.userId ? "left" : "right"}
+        align={
+          messageData[isGroup ? "sender_id" : "recipient_id"] === props.config.userId
+            ? isGroup
+              ? "right"
+              : "left"
+            : isGroup
+            ? "left"
+            : "right"
+        }
+        username={messageData.username}
         time={messageData.created_at}
         id={messageData.id}
         repliesTo={messageData.reply_message}
@@ -95,6 +111,7 @@ export default function Chat(props) {
         deleteFunction={deleteMessageCb}
         setReply={replyTo}
         editMessage={editMessageCb}
+        isGroup={isGroup}
       ></Message>
     );
   }
@@ -107,9 +124,12 @@ export default function Chat(props) {
     newFetching = true;
 
     try {
-      const response = await fetch(`/api/getLastId?sender_id=${props.config.chatId}`, {
-        method: "GET"
-      });
+      const response = await fetch(
+        `/api/getLastId?sender_id=${props.config.chatId}&isGroup=${props.config.isGroup}`,
+        {
+          method: "GET"
+        }
+      );
 
       const serverNewestId = (await response.json()).id;
       if (newestId < serverNewestId) {
@@ -119,7 +139,8 @@ export default function Chat(props) {
             body: JSON.stringify({
               recipientId: props.config.chatId,
               oldestId: newestId,
-              greater: "true"
+              greater: "true",
+              isGroup: props.config.isGroup
             })
           })
         ).json();
@@ -146,7 +167,8 @@ export default function Chat(props) {
         method: "POST",
         body: JSON.stringify({
           recipientId: props.config.chatId,
-          oldestId
+          oldestId,
+          isGroup: props.config.isGroup
         })
       });
 
@@ -230,10 +252,10 @@ export default function Chat(props) {
               const message = (event.target as HTMLInputElement).value;
 
               if (!editMode) {
-                await sendMessage(message, props.config.chatId, replyId);
+                await sendMessage(message, props.config.chatId, replyId, props.config.isGroup);
                 await fetchNewMessages();
               } else {
-                await editMessage(message, props.config.editId, props);
+                await editMessage(message, props.config.editId, props.config.isGroup, props);
                 changeEditMode(false);
               }
 
