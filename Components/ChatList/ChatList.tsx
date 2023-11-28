@@ -1,21 +1,11 @@
 import ChatCard from "./ChatCard";
 import styles from "../../styles/ChatList.module.css";
+import stylesPop from "../../styles/next.module.css";
 import React, { useEffect, useRef, useState } from "react";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import GroupAdd from "@mui/icons-material/GroupAdd";
-import {
-  useFloating,
-  autoUpdate,
-  offset,
-  flip,
-  shift,
-  useDismiss,
-  useRole,
-  useClick,
-  useInteractions,
-  FloatingFocusManager,
-  useId
-} from "@floating-ui/react";
+
+import { Button, Input, Popover, PopoverContent, PopoverTrigger } from "@nextui-org/react";
 
 async function createGroup(name: string) {
   if (!name) return;
@@ -33,23 +23,7 @@ export default function ChatList(props) {
   const [forceRefresh, changeForceRefresh] = React.useState(0);
 
   const [isOpen, setIsOpen] = useState(false);
-
-  const { refs, floatingStyles, context } = useFloating({
-    open: isOpen,
-    onOpenChange: setIsOpen,
-    middleware: [offset(10), flip({ fallbackAxisSideDirection: "start" }), shift()],
-    whileElementsMounted: autoUpdate
-  });
-
-  const click = useClick(context);
-  const dismiss = useDismiss(context);
-  const role = useRole(context);
   const groupName = useRef(null);
-
-  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss, role]);
-
-  const headingId = useId();
-
   async function fetchChats() {
     if (chatFetching) return;
 
@@ -100,38 +74,39 @@ export default function ChatList(props) {
   return (
     <Flipper flipKey={props.data.map((x) => x.sender_id).join(",")} className={styles.chatListCon}>
       <div>
-        <GroupAdd
-          className={styles.topIcon}
-          onClick={() => {
-            setIsOpen(!isOpen);
+        <Popover
+          isOpen={isOpen}
+          onOpenChange={(open) => setIsOpen(open)}
+          placement="bottom"
+          backdrop="blur"
+          classNames={{
+            content: [stylesPop.popover]
           }}
-        ></GroupAdd>
-        {isOpen && (
-          <FloatingFocusManager context={context} modal={false}>
-            <div
-              className={styles.createGroup}
-              ref={refs.setFloating}
-              style={floatingStyles}
-              aria-labelledby={headingId}
-            >
-              <textarea
-                className={styles.createGroupTextarea}
-                ref={groupName}
-                placeholder="Group name"
-              />
-              <br />
-              <button
-                className={styles.createGroupButton}
+        >
+          <PopoverTrigger>
+            <Button>
+              <GroupAdd
+                className={styles.topIcon}
                 onClick={() => {
-                  createGroup(groupName.current.value);
-                  setIsOpen(false);
+                  setIsOpen(true);
                 }}
-              >
-                Add
-              </button>
-            </div>
-          </FloatingFocusManager>
-        )}
+              ></GroupAdd>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <Input ref={groupName} placeholder="Group name" />
+            <Button
+              className={styles.createGroupButton}
+              color="primary"
+              onClick={() => {
+                createGroup(groupName.current.value);
+                setIsOpen(false);
+              }}
+            >
+              Add
+            </Button>
+          </PopoverContent>
+        </Popover>
       </div>
       {props.data.map((chatData) => (
         <Flipped

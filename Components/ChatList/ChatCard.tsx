@@ -1,6 +1,7 @@
 import styles from "../../styles/ChatCard.module.css";
 import { useRouter } from "next/router";
 import { dateToHuman } from "../helperClient";
+import { Button } from "@nextui-org/react";
 
 interface CardParams {
   username: string;
@@ -20,7 +21,7 @@ export default function ChatCard({
   isGroup
 }: CardParams) {
   return (
-    <div
+    <Button
       className={styles.card}
       onClick={() => {
         if (isGroup === 1) {
@@ -49,6 +50,6 @@ export default function ChatCard({
           {unreadCount}
         </div>
       </div>
-    </div>
+    </Button>
   );
 }

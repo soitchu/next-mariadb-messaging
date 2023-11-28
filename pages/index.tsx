@@ -4,6 +4,7 @@ import ChatList from "../Components/ChatList/ChatList";
 import React from "react";
 import Chat from "../Components/ChatList/Chat";
 import { getUserIdByCookie } from "../Components/helper";
+import { ToastContainer } from "react-toastify";
 
 export const getServerSideProps = async (context) => {
   await init();
@@ -51,6 +52,8 @@ export default function Home(props) {
         height: "100%"
       }}
     >
+      <ToastContainer draggable pauseOnHover theme="dark" />
+
       <ChatList data={...props.chats} test={10}></ChatList>
 
       {props.chatId && (

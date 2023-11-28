@@ -87,7 +87,7 @@ CREATE TABLE Group_message(
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
     PRIMARY KEY(id),
-    FOREIGN KEY (group_id) REFERENCES Group_member(group_id),
+    FOREIGN KEY (group_id) REFERENCES User_group(id) ON DELETE CASCADE,
     FOREIGN KEY (sender_id) REFERENCES User(id)
 );
 

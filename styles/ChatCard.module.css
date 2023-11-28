@@ -2,12 +2,12 @@
 
 .card {
   font-family: "Outfit", sans-serif;
-  height: 80px;
+  min-height: 80px;
   padding: 5px;
   width: 300px;
-  background-color: #3a2c2c;
+  /* background-color: #3a2c2c !important; */
   color: white;
-  margin: 20px;
+  margin: 10px;
   margin-left: auto;
   margin-right: auto;
   border-radius: 15px;
@@ -38,11 +38,12 @@
   align-items: center;
   flex-direction: column;
   margin: 10px;
+  text-align: left;
 }
 
 .message {
   width: 100%;
-  color: lightgray;
+  color: lightgray !important;
   margin-top: 5px;
   margin-right: auto;
   overflow: hidden;

@@ -4,6 +4,7 @@ import Message from "./Message";
 import React from "react";
 import { binarySearch } from "../helperClient";
 import CancelIcon from "@mui/icons-material/Cancel";
+import ChatTopMenu from "./ChatTopMenu";
 
 async function sendMessage(message: string, recipientId: number, replyId: number, isGroup: number) {
   if (!message || !message?.trim()) return;
@@ -198,17 +199,6 @@ export default function Chat(props) {
   );
 
   useEffect(() => {
-    // @todo: change this to setTimeout
-    // let brk = false;
-    // async function checkNewMessage() {
-    //   await new Promise(r => setTimeout(r, 2000));
-
-    //   if (brk) return;
-
-    //   await fetchNewMessages();
-    //   checkNewMessage();
-    // }
-
     const id = setInterval(fetchNewMessages, 3000);
 
     if (props.config.scrollToBottom == true) {
@@ -223,6 +213,10 @@ export default function Chat(props) {
 
   return (
     <div className={styles.chatCon}>
+      <ChatTopMenu
+        config={{ selectedUserId: -1 }}
+        chatId={Number(props.config.chatId)}
+      ></ChatTopMenu>
       {messageContainer}
       <div className={styles.inputCon}>
         {(replyId !== -1 || editMode) && (

@@ -44,7 +44,6 @@ export async function getChats(userId: number) {
 
   for (const row of rows) {
     if (row.created_at) {
-      // row.created_at = dateToHuman(row.created_at);
       row.created_at = dateToHuman(new Date(row.created_at));
     }
   }
@@ -66,6 +65,24 @@ export async function createGroup(userId: number, name: string) {
       VALUES (?)`,
     [groupId]
   );
+
+  await pool.execute(
+    `INSERT INTO Group_member (group_id, user_id, unread_count)
+      VALUES (?, ?, ?)`,
+    [groupId, userId, 0]
+  );
+}
+
+export async function addToGroup(ownerId: number, userId: number, groupId: number) {
+  const [row] = (await pool.execute(
+    `SELECT owner_id
+    FROM User_group 
+    WHERE id = ?`,
+    [groupId]
+  )) as RowDataPacket[];
+
+  if (ownerId !== row[0].owner_id)
+    throw new Error("You are not authorized to add a user to this group.");
 
   await pool.execute(
     `INSERT INTO Group_member (group_id, user_id, unread_count)
@@ -307,17 +324,16 @@ export async function getMessages(
   }
 
   const [rows] = await pool.execute(
-    `
-        SELECT m.created_at, m.id, m.message, m.sender_id, m.recipient_id, m1.message as reply_message FROM 
-          Replies r
-          JOIN Message m1 ON (m1.id = r.replies_to)
-          RIGHT JOIN Message m ON (r.message_id = m.id)
-        WHERE (
-                (m.sender_id = ? AND m.recipient_id = ?) OR 
-                (m.sender_id = ? AND m.recipient_id = ?)
-              ) AND ${condition}
-        ORDER BY m.id DESC 
-        ${!greater ? "LIMIT 100" : ""}`,
+    `SELECT m.created_at, m.id, m.message, m.sender_id, m.recipient_id, m1.message as reply_message FROM 
+      Replies r
+      JOIN Message m1 ON (m1.id = r.replies_to)
+      RIGHT JOIN Message m ON (r.message_id = m.id)
+    WHERE (
+            (m.sender_id = ? AND m.recipient_id = ?) OR 
+            (m.sender_id = ? AND m.recipient_id = ?)
+          ) AND ${condition}
+    ORDER BY m.id DESC 
+    ${!greater ? "LIMIT 100" : ""}`,
     [senderId, recipientId, recipientId, senderId, lastId === -1 ? Infinity : lastId]
   );
 
@@ -343,11 +359,8 @@ export async function sendMessage(
   await init();
 
   if (isGroup === true) {
-    // We don't need to check if the user is in the group
-    // because foreign key constraints take care of that
-    // for us. We it would probably be better to check
-    // that regardless, to make sure the error message
-    // is more readable
+    const userInGroup = await isUserInGroup(sender_id, recipient_id);
+    if (userInGroup !== true) return;
 
     const res = (await pool.execute(
       `
