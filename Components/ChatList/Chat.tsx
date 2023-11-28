@@ -5,6 +5,7 @@ import React from "react";
 import { binarySearch } from "../helperClient";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ChatTopMenu from "./ChatTopMenu";
+import io from "socket.io-client";
 
 async function sendMessage(message: string, recipientId: number, replyId: number, isGroup: number) {
   if (!message || !message?.trim()) return;
@@ -206,7 +207,16 @@ export default function Chat(props) {
       props.config.scrollToBottom = false;
     }
 
+    const socket = io({
+      path: "/api/socket"
+    });
+
+    socket.on("message", (message) => {
+      console.log(message);
+    });
+
     return () => {
+      socket.disconnect();
       clearInterval(id);
     };
   }, [messageElems.length]);

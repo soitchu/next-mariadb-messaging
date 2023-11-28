@@ -1,6 +1,16 @@
-import mysql, { RowDataPacket } from "mysql2/promise";
+import mysql, { ResultSetHeader, RowDataPacket } from "mysql2/promise";
+import { editMessageEvent, init as initWebSocket, io } from "./socket";
 export let pool: mysql.Pool;
 let hasBeenInitialised = false;
+
+export async function initSocket(server) {
+  initWebSocket(server);
+}
+
+// const random = Math.random();
+// setInterval(() => {
+//   console.log("ee", random);
+// }, 1000);
 
 function dateToHuman(date: Date) {
   return date.toISOString();
@@ -98,12 +108,16 @@ export async function editMessage(
   isGroup: boolean
 ) {
   if (isGroup) {
-    await pool.execute(
+    const res = (await pool.execute(
       `UPDATE Group_message
        SET message = ?
        WHERE id = ? AND sender_id = ?`,
       [message, messageId, userId]
-    );
+    )) as ResultSetHeader[];
+
+    if (res[0].affectedRows === 1) {
+      editMessageEvent(userId, message, messageId);
+    }
     return;
   }
   await pool.execute(
@@ -157,7 +171,7 @@ export async function getUserIdByToken(token: string) {
     [token]
   )) as RowDataPacket[][];
 
-  if (rows[0].length === 0) {
+  if (!rows || !rows[0] || rows[0].length === 0) {
     throw new Error("Token not found");
   } else {
     return rows[0].user_id;
