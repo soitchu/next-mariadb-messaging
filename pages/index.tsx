@@ -1,28 +1,16 @@
-import { getChats, getMessages, init } from "../api";
 import "../styles/Home.module.css";
 import ChatList from "../Components/ChatList/ChatList";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Chat from "../Components/ChatList/Chat";
-import { getUserIdByCookie } from "../Components/helper";
 import { ToastContainer } from "react-toastify";
+import { useRouter } from "next/router";
+import { getUserIdByCookie } from "../Components/helper";
 
 export const getServerSideProps = async (context) => {
-  await init();
   const userId = Number(await getUserIdByCookie(context.req.cookies["X-Auth-Token"]));
-  const chats = await getChats(userId);
-  let messages = [];
-  const isGroup = context.query.isGroup === "true";
-
-  try {
-    messages = await getMessages(userId, context.query.chat, Infinity, false, isGroup);
-  } catch (err) {}
 
   return {
     props: {
-      chats,
-      messages,
-      chatId: context.query.chat ?? -1,
-      isGroup,
       userId // Not used for authentication (that'd be a bad idea)
       // It's solely used to align the messages correctly
       // so it isn't a security issue if it's changed on
@@ -31,20 +19,33 @@ export const getServerSideProps = async (context) => {
   };
 };
 
+function getMessageId(messageId: string | null) {
+  if (!messageId) return -1;
+  if (isNaN(parseInt(messageId))) return -1;
+
+  return parseInt(messageId);
+}
+
 export default function Home(props) {
-  // const router = useRouter();
-  // console.log(router);
-  // if (router.pathname.startsWith("/500")) {
-  //   return Custom500();
-  // }
+  const router = useRouter();
+  const [chatConfig, changeChatConfig] = useState({
+    chatId: Number(router.query.chat),
+    isGroup: router.query.isGroup === "true",
+    messageId: getMessageId(router.query.messageId as string)
+  });
 
-  // if (router.pathname.startsWith("/404")) {
-  //   return Custom404();
-  // }
+  useEffect(() => {
+    router.events.on("routeChangeStart", (url, obj) => {
+      url.startsWith("/") && (url = url.substring(1));
+      const params = new URLSearchParams(url);
 
-  // if (router.pathname.startsWith("/login")) {
-  //   return Login();
-  // }
+      changeChatConfig({
+        chatId: Number(params.get("chat")),
+        isGroup: params.get("isGroup") === "true",
+        messageId: getMessageId(params.get("messageId"))
+      });
+    });
+  }, []);
 
   return (
     <div
@@ -54,16 +55,17 @@ export default function Home(props) {
     >
       <ToastContainer draggable pauseOnHover theme="dark" />
 
-      <ChatList data={...props.chats} test={10}></ChatList>
+      <ChatList></ChatList>
 
-      {props.chatId && (
+      {chatConfig.chatId && (
         <Chat
-          data={...props.messages}
+          data={[]}
           config={{
-            chatId: props.chatId,
+            chatId: chatConfig.chatId,
             userId: Number(props.userId),
+            messageId: chatConfig.messageId,
             editId: -1,
-            isGroup: props.isGroup,
+            isGroup: chatConfig.isGroup,
             scrollToBottom: true
           }}
         ></Chat>

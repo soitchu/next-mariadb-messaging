@@ -1,5 +1,5 @@
 import styles from "../../styles/ChatCard.module.css";
-import { useRouter } from "next/router";
+import { Router, useRouter } from "next/router";
 import { dateToHuman } from "../helperClient";
 import { Button } from "@nextui-org/react";
 
@@ -20,16 +20,21 @@ export default function ChatCard({
   unreadCount,
   isGroup
 }: CardParams) {
+  const router = useRouter();
   return (
     <Button
       className={styles.card}
       onClick={() => {
         if (isGroup === 1) {
-          window.history.pushState({}, undefined, `?chat=${id}&isGroup=true`);
+          router.push({
+            query: { chat: id, isGroup: true }
+          });
         } else {
-          window.history.pushState({}, undefined, `?chat=${id}`);
+          router.push({
+            query: { chat: id }
+          });
         }
-        window.location.reload();
+        // window.location.reload();
       }}
     >
       <div className={styles.pfpCon}>

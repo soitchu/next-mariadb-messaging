@@ -10,8 +10,8 @@ import {
 import React, { useEffect } from "react";
 import styles from "../../styles/Chat.module.css";
 import stylesNext from "../../styles/next.module.css";
-
 import { toast } from "react-toastify";
+import { Delete } from "@mui/icons-material";
 
 async function addToGroup(userId: number, groupId: number) {
   const response = await fetch("/api/addToGroup", {
@@ -24,6 +24,38 @@ async function addToGroup(userId: number, groupId: number) {
 
   if (response.ok) {
     toast.success("Added!");
+  } else {
+    toast.error((await response.json()).message);
+  }
+}
+
+async function deleteGroup(groupId: number) {
+  const response = await fetch("/api/deleteGroup", {
+    method: "POST",
+    body: JSON.stringify({
+      groupId
+    })
+  });
+
+  if (response.ok) {
+    toast.success("Deleted!");
+    location.reload();
+  } else {
+    toast.error((await response.json()).message);
+  }
+}
+
+async function deleteChat(chatId: number) {
+  const response = await fetch("/api/deleteChat", {
+    method: "POST",
+    body: JSON.stringify({
+      chatId
+    })
+  });
+
+  if (response.ok) {
+    toast.success("Deleted!");
+    location.reload();
   } else {
     toast.error((await response.json()).message);
   }
@@ -42,7 +74,7 @@ export default function ChatTopMenu(props) {
           method: "POST"
         })
       ).json();
-      console.log(response);
+
       for (const chatEntry of response) {
         if (chatEntry.is_group) continue;
         users.push({
@@ -56,49 +88,71 @@ export default function ChatTopMenu(props) {
 
   return (
     <div className={styles.topBar}>
-      <Popover
-        isOpen={isOpen}
-        onOpenChange={(open) => setIsOpen(open)}
-        backdrop="blur"
-        classNames={{
-          content: [stylesNext.popover]
-        }}
-      >
-        <PopoverTrigger>
-          <Button style={{ minWidth: "30px" }}>
-            <GroupAdd
-              style={{
-                cursor: "pointer"
+      {props.isGroup && (
+        <Popover
+          isOpen={isOpen}
+          onOpenChange={(open) => setIsOpen(open)}
+          backdrop="blur"
+          classNames={{
+            content: [stylesNext.popover]
+          }}
+        >
+          <PopoverTrigger>
+            <Button style={{ minWidth: "30px" }}>
+              <GroupAdd
+                style={{
+                  cursor: "pointer"
+                }}
+              ></GroupAdd>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent style={{ backgroundColor: "red" }}>
+            <Autocomplete
+              defaultItems={userList}
+              label="User"
+              placeholder="Search a user"
+              onSelectionChange={(value) => {
+                changeUserId(Number(value));
               }}
-            ></GroupAdd>
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent style={{ backgroundColor: "red" }}>
-          <Autocomplete
-            defaultItems={userList}
-            label="User"
-            placeholder="Search a user"
-            onSelectionChange={(value) => {
-              changeUserId(Number(value));
-            }}
-          >
-            {(users) => <AutocompleteItem key={users.value}>{users.label}</AutocompleteItem>}
-          </Autocomplete>
-          <Button
-            color="primary"
-            style={{
-              marginTop: "10px"
-            }}
-            className={stylesNext.nextButton}
-            onClick={async () => {
-              await addToGroup(userId, props.chatId);
-              setIsOpen(false);
-            }}
-          >
-            Add
-          </Button>
-        </PopoverContent>
-      </Popover>
+            >
+              {(users) => <AutocompleteItem key={users.value}>{users.label}</AutocompleteItem>}
+            </Autocomplete>
+            <Button
+              color="primary"
+              style={{
+                marginTop: "10px"
+              }}
+              className={stylesNext.nextButton}
+              onClick={async () => {
+                await addToGroup(userId, props.chatId);
+                setIsOpen(false);
+              }}
+            >
+              Add
+            </Button>
+          </PopoverContent>
+        </Popover>
+      )}
+
+      <Button style={{ minWidth: "30px", marginLeft: "10px" }}>
+        <Delete
+          style={{
+            cursor: "pointer"
+          }}
+          onClick={async () => {
+            const sure = confirm(
+              `Are you sure that you want to delete this ${props.isGroup ? "group" : "chat"} ?`
+            );
+            if (sure) {
+              if (props.isGroup) {
+                deleteGroup(props.chatId);
+              } else {
+                deleteChat(props.chatId);
+              }
+            }
+          }}
+        ></Delete>
+      </Button>
     </div>
   );
 }

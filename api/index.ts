@@ -7,7 +7,8 @@ export async function initSocket(server) {
   initWebSocket(server);
 }
 
-// const random = Math.random();
+const random = Math.random();
+console.log(random);
 // setInterval(() => {
 //   console.log("ee", random);
 // }, 1000);
@@ -83,7 +84,7 @@ export async function createGroup(userId: number, name: string) {
   );
 }
 
-export async function addToGroup(ownerId: number, userId: number, groupId: number) {
+export async function isOwner(ownerId: number, groupId: number) {
   const [row] = (await pool.execute(
     `SELECT owner_id
     FROM User_group 
@@ -91,7 +92,11 @@ export async function addToGroup(ownerId: number, userId: number, groupId: numbe
     [groupId]
   )) as RowDataPacket[];
 
-  if (ownerId !== row[0].owner_id)
+  return ownerId === row[0].owner_id;
+}
+
+export async function addToGroup(ownerId: number, userId: number, groupId: number) {
+  if (!(await isOwner(ownerId, groupId)))
     throw new Error("You are not authorized to add a user to this group.");
 
   await pool.execute(
@@ -115,9 +120,10 @@ export async function editMessage(
       [message, messageId, userId]
     )) as ResultSetHeader[];
 
-    if (res[0].affectedRows === 1) {
-      editMessageEvent(userId, message, messageId);
-    }
+    // @todo: implement websockets
+    // if (res[0].affectedRows === 1) {
+    //   editMessageEvent(userId, message, messageId);
+    // }
     return;
   }
   await pool.execute(
@@ -143,6 +149,17 @@ export async function addSession(userId: string, userAgent: string, token: strin
             INSERT INTO Session (id, user_id, user_agent) 
             VALUES (?, ?, ?)`,
     [token, userId, userAgent]
+  );
+}
+
+export async function changeUsername(userId: string, username: string) {
+  if (!username) throw new Error("Invalid username");
+
+  await pool.execute(
+    `UPDATE User
+     SET username = ?
+     WHERE id = ?`,
+    [username, userId]
   );
 }
 
@@ -184,6 +201,14 @@ export async function deleteGroupMessage(messageId: number, senderId: number, gr
     senderId
   ]);
 }
+
+export async function deleteGroup(groupId: number, ownerId: number) {
+  if (!(await isOwner(ownerId, groupId)))
+    throw new Error("You are not authorized to delete this group.");
+
+  await pool.execute(`DELETE FROM User_group where id = ? AND owner_id = ?`, [groupId, ownerId]);
+}
+
 export async function deleteMessage(
   messageId: number,
   senderId: number,
@@ -304,6 +329,7 @@ export async function getMessages(
   isGroup: boolean
 ) {
   const condition = greater ? `m.id > ?` : `m.id < ?`;
+  const order = greater ? `ASC` : `DESC`;
 
   if (isGroup) {
     const userInGroup = await isUserInGroup(senderId, recipientId);
@@ -318,8 +344,9 @@ export async function getMessages(
         JOIN User u ON (m.sender_id = u.id)
       WHERE m.group_id = ?
             AND ${condition}
-      ORDER BY m.id DESC 
-      ${!greater ? "LIMIT 10" : ""}`,
+      ORDER BY m.id ${order} 
+      LIMIT 10
+      ${!greater ? "" : ""}`,
       [recipientId, lastId === -1 ? Infinity : lastId]
     );
 
@@ -346,8 +373,9 @@ export async function getMessages(
             (m.sender_id = ? AND m.recipient_id = ?) OR 
             (m.sender_id = ? AND m.recipient_id = ?)
           ) AND ${condition}
-    ORDER BY m.id DESC 
-    ${!greater ? "LIMIT 100" : ""}`,
+    ORDER BY m.id ${order} 
+    LIMIT 10
+    ${!greater ? "" : ""}`,
     [senderId, recipientId, recipientId, senderId, lastId === -1 ? Infinity : lastId]
   );
 
@@ -361,6 +389,15 @@ export async function getMessages(
   ]);
 
   return rows;
+}
+
+export async function deleteChat(sender_id: number, recipient_id: number) {
+  await pool.execute(
+    `DELETE FROM Chat
+     WHERE (sender_id = ? AND recipient_id = ?) OR
+           (recipient_id = ? AND sender_id = ?)`,
+    [sender_id, recipient_id, sender_id, recipient_id]
+  );
 }
 
 export async function sendMessage(
@@ -423,6 +460,21 @@ export async function sendMessage(
     return;
   }
 
+  const ids = [
+    [sender_id, recipient_id],
+    [recipient_id, sender_id]
+  ];
+
+  for (const id of ids) {
+    await pool.execute(
+      `
+        INSERT IGNORE INTO Chat 
+        (recipient_id, sender_id, message_id, unread_count)
+        VALUES (?, ?, ?, 1)`,
+      [id[1], id[0], null]
+    );
+  }
+
   const res = await pool.execute(
     `
         INSERT INTO Message 
@@ -433,22 +485,17 @@ export async function sendMessage(
 
   const insertId = res[0].insertId;
 
-  const ids = [
-    [sender_id, recipient_id],
-    [recipient_id, sender_id]
-  ];
-
   for (const id of ids) {
     await pool.execute(
       `
-        INSERT INTO Chat 
-        (recipient_id, sender_id, message_id, unread_count)
-        VALUES (?, ?, ?, 1) 
-        ON DUPLICATE KEY UPDATE 
+        UPDATE Chat 
+        SET
             message_id =  ?, 
             created_at = UTC_TIMESTAMP(),
-            unread_count = unread_count + 1;`,
-      [id[1], id[0], insertId, insertId]
+            unread_count = unread_count + 1
+        WHERE sender_id = ? AND
+              recipient_id = ?;`,
+      [insertId, id[1], id[0]]
     );
   }
 

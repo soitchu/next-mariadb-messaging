@@ -4,8 +4,9 @@ DROP TABLE IF EXISTS Group_message;
 DROP TABLE IF EXISTS Group_member;
 DROP TABLE IF EXISTS User_group;
 DROP TABLE IF EXISTS Replies;
-DROP TABLE IF EXISTS Chat;
+ALTER TABLE Chat DROP CONSTRAINT fk_message;
 DROP TABLE IF EXISTS Message;
+DROP TABLE IF EXISTS Chat;
 DROP TABLE IF EXISTS Session;
 DROP TABLE IF EXISTS User;
 
@@ -13,6 +14,7 @@ CREATE TABLE User(
     id BIGINT AUTO_INCREMENT NOT NULL,
     username VARCHAR(50) NOT NULL UNIQUE,
     hashed_password BLOB NOT NULL,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY(id)
 );
 
@@ -24,28 +26,30 @@ CREATE TABLE Session(
     PRIMARY KEY(id)
 );
 
+CREATE TABLE Chat(
+    recipient_id BIGINT NOT NULL,
+    sender_id BIGINT NOT NULL,
+    message_id BIGINT,
+    unread_count INT DEFAULT 0 NOT NULL,
+    created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
+    PRIMARY KEY(recipient_id, sender_id),
+    FOREIGN KEY (sender_id) REFERENCES User(id),
+    FOREIGN KEY (recipient_id) REFERENCES User(id)
+);
+
+
 CREATE TABLE Message(
     id BIGINT AUTO_INCREMENT NOT NULL,
     recipient_id BIGINT NOT NULL,
     sender_id BIGINT NOT NULL,
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
-    FOREIGN KEY (sender_id) REFERENCES User(id),
-    FOREIGN KEY (recipient_id) REFERENCES User(id),
+    FOREIGN KEY (sender_id) REFERENCES Chat(sender_id) ON DELETE CASCADE,
+    FOREIGN KEY (recipient_id) REFERENCES Chat(recipient_id) ON DELETE CASCADE,
     PRIMARY KEY(id)
 );
 
-CREATE TABLE Chat(
-    recipient_id BIGINT NOT NULL,
-    sender_id BIGINT NOT NULL,
-    message_id BIGINT NOT NULL,
-    unread_count INT DEFAULT 0 NOT NULL,
-    created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
-    PRIMARY KEY(recipient_id, sender_id),
-    FOREIGN KEY (sender_id) REFERENCES User(id),
-    FOREIGN KEY (recipient_id) REFERENCES User(id),
-    FOREIGN KEY (message_id) REFERENCES Message(id)
-);
+ALTER TABLE Chat ADD CONSTRAINT fk_message FOREIGN KEY (message_id) REFERENCES Message(id) ON DELETE SET NULL;
 
 CREATE TABLE Replies(
     message_id BIGINT NOT NULL,
@@ -116,14 +120,15 @@ CREATE TABLE Group_replies(
     FOREIGN KEY (replies_to) REFERENCES Group_message(id) ON DELETE CASCADE
 );
 
-INSERT INTO User VALUES(1, "user1", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm");
-INSERT INTO User VALUES(2, "user2", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm");
-INSERT INTO User VALUES(3, "user3", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm");
+INSERT INTO User VALUES(1, "user1", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE);
+INSERT INTO User VALUES(2, "user2", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE);
+INSERT INTO User VALUES(3, "user3", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE);
 
+
+INSERT INTO Chat (recipient_id, sender_id, message_id, unread_count) VALUES(1, 2, NULL, 0);
+INSERT INTO Chat (recipient_id, sender_id, message_id, unread_count) VALUES(2, 1, NULL, 0);
 INSERT INTO Message (id, recipient_id, sender_id, message) VALUES(1, 1, 1, "");
 INSERT INTO Message (recipient_id, sender_id, message) VALUES(1, 2, "Hi :D");
-INSERT INTO Chat (recipient_id, sender_id, message_id, unread_count) VALUES(1, 2, LAST_INSERT_ID(), 0);
-INSERT INTO Chat (recipient_id, sender_id, message_id, unread_count) VALUES(2, 1, LAST_INSERT_ID(), 0);
 
 INSERT INTO Message (recipient_id, sender_id, message) VALUES(2, 1, "Hello!");
 

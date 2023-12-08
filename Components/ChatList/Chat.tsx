@@ -28,7 +28,7 @@ async function sendMessage(message: string, recipientId: number, replyId: number
   }
 }
 
-async function editMessage(message: string, messageId: number, isGroup: boolean, props) {
+async function editMessage(message: string, messageId: number, isGroup: boolean, messageData) {
   if (!message || !message?.trim()) return;
   const response = await fetch("/api/editMessage", {
     method: "POST",
@@ -40,9 +40,9 @@ async function editMessage(message: string, messageId: number, isGroup: boolean,
   });
 
   if (response.ok) {
-    const messageIndex = binarySearch(props.data, Number(messageId));
+    const messageIndex = binarySearch(messageData, Number(messageId));
     if (messageIndex !== -1) {
-      props.data[messageIndex].message = message;
+      messageData[messageIndex].message = message;
     }
     return;
   } else {
@@ -55,9 +55,13 @@ export default function Chat(props) {
   const messageElems = [];
   const containerElem = useRef(null);
   const inputElem = useRef(null);
+  const messageLookUp = {};
+  const [messageData, changeMessageData] = React.useState({
+    messages: [],
+    oldestId: -1,
+    newestId: 0
+  });
 
-  const [oldestId, changeOldestId] = React.useState(props.data[props.data.length - 1]?.id ?? -1);
-  const [newestId, changeNewestId] = React.useState(props.data[0]?.id ?? 0);
   const [forceRefresh, changeForceRefresh] = React.useState(0);
   const [replyId, changeReplyId] = React.useState(-1);
   const [editMode, changeEditMode] = React.useState(false);
@@ -67,9 +71,9 @@ export default function Chat(props) {
   let chatFetching = false;
 
   function deleteMessageCb(messageId: string) {
-    const messageIndex = binarySearch(props.data, Number(messageId));
+    const messageIndex = binarySearch(messageData.messages, Number(messageId));
     if (messageIndex !== -1) {
-      props.data.splice(messageIndex, 1);
+      messageData.messages.splice(messageIndex, 1);
       changeForceRefresh(forceRefresh + 1);
     }
   }
@@ -89,14 +93,16 @@ export default function Chat(props) {
 
   const isGroup = props.config.isGroup;
 
-  for (const messageData of props.data) {
-    // @todo refactor this abomination
-    messageElems.push(
+  for (const messageObj of messageData.messages) {
+    // @todo refactor and optimise this abomination
+    if (messageObj.id in messageLookUp) continue;
+
+    const messageElement = (
       <Message
-        key={messageData.id}
-        content={messageData.message}
+        key={messageObj.id}
+        content={messageObj.message}
         align={
-          messageData[isGroup ? "sender_id" : "recipient_id"] === props.config.userId
+          messageObj[isGroup ? "sender_id" : "recipient_id"] === props.config.userId
             ? isGroup
               ? "right"
               : "left"
@@ -104,10 +110,10 @@ export default function Chat(props) {
             ? "left"
             : "right"
         }
-        username={messageData.username}
-        time={messageData.created_at}
-        id={messageData.id}
-        repliesTo={messageData.reply_message}
+        username={messageObj.username}
+        time={messageObj.created_at}
+        id={messageObj.id}
+        repliesTo={messageObj.reply_message}
         chatId={props.config.chatId}
         deleteFunction={deleteMessageCb}
         setReply={replyTo}
@@ -115,11 +121,15 @@ export default function Chat(props) {
         isGroup={isGroup}
       ></Message>
     );
+
+    messageLookUp[messageObj.id] = messageElement;
+    messageElems.push(messageElement);
   }
 
   messageElems.reverse();
 
-  async function fetchNewMessages() {
+  async function fetchNewMessages(forceFetch = false, newestId = -1) {
+    if (props.config.messageId !== -1 && !forceFetch) return;
     if (newFetching) return;
 
     newFetching = true;
@@ -133,22 +143,28 @@ export default function Chat(props) {
       );
 
       const serverNewestId = (await response.json()).id;
-      if (newestId < serverNewestId) {
+      if (messageData.newestId < serverNewestId) {
         const newMessages = await (
           await fetch("/api/getMessages", {
             method: "POST",
             body: JSON.stringify({
               recipientId: props.config.chatId,
-              oldestId: newestId,
+              oldestId: newestId === -1 ? messageData.newestId : newestId,
               greater: "true",
               isGroup: props.config.isGroup
             })
           })
         ).json();
 
-        props.data.unshift(...newMessages);
+        newMessages.reverse();
+        messageData.messages.unshift(...newMessages);
 
-        changeNewestId(newMessages[0].id);
+        changeMessageData({
+          messages: messageData.messages,
+          newestId: newMessages[0].id,
+          oldestId: messageData.oldestId
+        });
+
         props.config.scrollToBottom = true;
       } else {
         newFetching = false;
@@ -159,25 +175,55 @@ export default function Chat(props) {
     }
   }
 
-  async function fetchOldMessages() {
+  async function fetchOldMessages(iniFetch: boolean = false, messageId: number = -1) {
     if (fetching) return;
+
+    console.log(props.config);
+    console.log(
+      iniFetch,
+      messageId,
+      iniFetch ? (messageId === -1 ? -1 : messageId + 1) : messageData.oldestId
+    );
 
     fetching = true;
     try {
-      const response = await fetch("/api/getMessages", {
-        method: "POST",
-        body: JSON.stringify({
-          recipientId: props.config.chatId,
-          oldestId,
-          isGroup: props.config.isGroup
+      const response = await (
+        await fetch("/api/getMessages", {
+          method: "POST",
+          body: JSON.stringify({
+            recipientId: props.config.chatId,
+            oldestId: iniFetch ? (messageId === -1 ? -1 : messageId + 1) : messageData.oldestId,
+            isGroup: props.config.isGroup
+          })
         })
-      });
+      ).json();
 
-      props.data.push(...(await response.json()));
-      changeOldestId(props.data[props.data.length - 1].id);
+      const newMessageData = {
+        messages: messageData.messages,
+        newestId: messageData.newestId,
+        oldestId: messageData.oldestId
+      };
+
+      if (iniFetch) {
+        newMessageData.messages = response;
+        messageData.messages = response;
+      } else {
+        newMessageData.messages.push(...response);
+      }
+
+      if (response.length > 0) {
+        newMessageData.oldestId = response[response.length - 1]?.id;
+
+        if (iniFetch) {
+          newMessageData.newestId = response[0].id;
+        }
+      }
+
+      changeMessageData(newMessageData);
     } catch (err) {
-      fetching = false;
       console.error(err);
+    } finally {
+      fetching = false;
     }
   }
 
@@ -191,7 +237,9 @@ export default function Chat(props) {
       ref={containerElem}
       onScroll={function (event) {
         if (containerElem.current.scrollTop < 400) {
-          fetchOldMessages();
+          if (props.config.messageId === -1) {
+            fetchOldMessages();
+          }
         }
       }}
     >
@@ -199,32 +247,44 @@ export default function Chat(props) {
     </div>
   );
 
+  useEffect(() => {}, []);
+
+  // This makes sure that the fetchNewMessages has the updated
+  // state values
   useEffect(() => {
     const id = setInterval(fetchNewMessages, 3000);
-
-    if (props.config.scrollToBottom == true) {
-      containerElem.current.scrollTop = containerElem.current.scrollHeight + 100;
-      props.config.scrollToBottom = false;
-    }
-
-    const socket = io({
-      path: "/api/socket"
-    });
-
-    socket.on("message", (message) => {
-      console.log(message);
-    });
-
     return () => {
-      socket.disconnect();
+      // socket.disconnect();
       clearInterval(id);
     };
-  }, [messageElems.length]);
+    // const socket = io({
+    //   path: "/api/socket"
+    // });
+    // socket.on("message", (message) => {
+    //   console.log(message);
+    // });
+  }, [messageData.newestId]);
+
+  useEffect(() => {
+    (async function () {
+      await fetchOldMessages(true, props.config.messageId);
+
+      if (props.config.messageId !== -1) {
+        await fetchNewMessages(true, props.config.messageId);
+      } else {
+        setTimeout(() => {
+          const scrollHeight = containerElem.current.scrollHeight;
+          containerElem.current.scrollTop = scrollHeight + 100;
+        }, 200);
+      }
+    })();
+  }, [props.config.chatId]);
 
   return (
     <div className={styles.chatCon}>
       <ChatTopMenu
         config={{ selectedUserId: -1 }}
+        isGroup={props.config.isGroup}
         chatId={Number(props.config.chatId)}
       ></ChatTopMenu>
       {messageContainer}
@@ -258,7 +318,7 @@ export default function Chat(props) {
                 await sendMessage(message, props.config.chatId, replyId, props.config.isGroup);
                 await fetchNewMessages();
               } else {
-                await editMessage(message, props.config.editId, props.config.isGroup, props);
+                await editMessage(message, props.config.editId, props.config.isGroup, messageData);
                 changeEditMode(false);
               }
 

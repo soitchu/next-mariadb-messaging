@@ -7,10 +7,10 @@ console.log("====== :DD");
 
 export function editMessageEvent(userId: number, content: string, messageId: number) {
   console.log(io);
-  // io.in(`user-${userId}`).emit("editMessage", {
-  //   content,
-  //   messageId
-  // });
+  io.in(`user-${userId}`).emit("message", {
+    content,
+    messageId
+  });
 }
 
 export function init(server: any) {
@@ -23,10 +23,7 @@ export function init(server: any) {
     try {
       const cookies = Cookie.parse(socket.request.headers.cookie);
       const userId = await getUserIdByCookie(cookies["X-Auth-Token"]);
-      console.log(userId);
-      // console.log(socket.)
-      // const userId = await getUserIdByCookie(req.cookies["X-Auth-Token"]);
-      // socket.join(`user-${userId}`);
+      socket.join(`user-${userId}`);
     } catch (err) {
       socket.disconnect();
       console.error(err);
