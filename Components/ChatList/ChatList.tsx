@@ -6,8 +6,9 @@ import { Flipper, Flipped } from "react-flip-toolkit";
 import GroupAdd from "@mui/icons-material/GroupAdd";
 
 import { Button, Input, Popover, PopoverContent, PopoverTrigger } from "@nextui-org/react";
-import { ManageAccounts } from "@mui/icons-material";
+import { Add, ManageAccounts } from "@mui/icons-material";
 import { toast } from "react-toastify";
+import { Router, useRouter } from "next/router";
 
 async function createGroup(name: string) {
   if (!name) return;
@@ -47,11 +48,29 @@ export default function ChatList(props) {
 
   const [isGroupAddOpen, setGroupAddOpen] = useState(false);
   const [ischangeUserOpen, setChangeUserOpen] = useState(false);
+  const [isAddUserOpen, setAddUserOpen] = useState(false);
   const [chatData, changeChatData] = useState([]);
   const [loaded, changeLoaded] = useState(false);
 
   const groupName = useRef(null);
   const username = useRef(null);
+  const addUser = useRef(null);
+  const router = useRouter();
+
+  async function messageUser(username: string) {
+    const { id } = await (
+      await fetch(`/api/getUserId`, {
+        method: "POST",
+        body: JSON.stringify({ username })
+      })
+    ).json();
+
+    router.push({
+      query: {
+        chat: id
+      }
+    });
+  }
 
   async function fetchChats() {
     if (chatFetching) return;
@@ -128,7 +147,7 @@ export default function ChatList(props) {
           <PopoverTrigger className={styles.createGroupButton}>
             <Button
               style={{
-                minWidth: "50px",
+                minWidth: "40px",
                 padding: "0"
               }}
             >
@@ -166,7 +185,7 @@ export default function ChatList(props) {
           <PopoverTrigger className={styles.createGroupButton}>
             <Button
               style={{
-                minWidth: "50px",
+                minWidth: "40px",
                 marginLeft: "10px",
                 padding: "0"
               }}
@@ -190,6 +209,46 @@ export default function ChatList(props) {
               }}
             >
               Change
+            </Button>
+          </PopoverContent>
+        </Popover>
+
+        <Popover
+          isOpen={isAddUserOpen}
+          onOpenChange={(open) => setAddUserOpen(open)}
+          placement="bottom"
+          backdrop="blur"
+          classNames={{
+            content: [stylesPop.popover]
+          }}
+        >
+          <PopoverTrigger className={styles.createGroupButton}>
+            <Button
+              style={{
+                minWidth: "40px",
+                marginLeft: "10px",
+                padding: "0"
+              }}
+            >
+              <Add
+                className={styles.topIcon}
+                onClick={() => {
+                  setAddUserOpen(true);
+                }}
+              ></Add>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <Input ref={addUser} placeholder="Enter the username" />
+            <Button
+              style={{ marginTop: "10px" }}
+              color="primary"
+              onClick={() => {
+                messageUser(addUser.current.value);
+                setAddUserOpen(false);
+              }}
+            >
+              Add
             </Button>
           </PopoverContent>
         </Popover>

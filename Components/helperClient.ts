@@ -12,8 +12,8 @@ function checkIfDayisToday(date: Date) {
 export function dateToHuman(dateString: string, includeDate = false) {
   const date = new Date(dateString);
   return !checkIfDayisToday(date)
-    ? moment().format("HH:mm - Do MMM YYYY")
-    : moment().format("HH:mm");
+    ? moment(date).format("HH:mm - Do MMM YYYY")
+    : moment(date).format("HH:mm");
 }
 
 export function binarySearch(data, val) {

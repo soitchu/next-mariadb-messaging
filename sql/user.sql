@@ -124,9 +124,13 @@ CREATE TABLE Group_replies(
     FOREIGN KEY (replies_to) REFERENCES Group_message(id) ON DELETE CASCADE
 );
 
-INSERT INTO User VALUES(1, "user1", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE);
-INSERT INTO User VALUES(2, "user2", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE);
-INSERT INTO User VALUES(3, "user3", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE);
+-- Password: qwerty1234
+INSERT INTO User VALUES(1, "user1", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE, FALSE);
+INSERT INTO User VALUES(2, "user2", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE, FALSE);
+INSERT INTO User VALUES(3, "user3", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE, FALSE);
+
+-- Password: admin
+INSERT INTO User VALUES(4, "admin", "$2b$10$6/SoWpxPc7axHFymvZy1TOAeav.VmCU.JVI/Yifjo9mSP/qYwxGfO", FALSE, TRUE);
 
 
 INSERT INTO Chat (recipient_id, sender_id, message_id, unread_count) VALUES(1, 2, NULL, 0);

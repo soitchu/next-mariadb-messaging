@@ -5,7 +5,6 @@ import React from "react";
 import { binarySearch } from "../helperClient";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ChatTopMenu from "./ChatTopMenu";
-import io from "socket.io-client";
 
 async function sendMessage(message: string, recipientId: number, replyId: number, isGroup: number) {
   if (!message || !message?.trim()) return;
@@ -271,6 +270,7 @@ export default function Chat(props) {
   }, [messageData.newestId]);
 
   useEffect(() => {
+    console.log(messageData, props.config.chatId, fetching);
     (async function () {
       await fetchOldMessages(true, props.config.messageId);
 
@@ -289,7 +289,7 @@ export default function Chat(props) {
         }, 200);
       }
     })();
-  }, [props.config.chatId, props.config.messageId]);
+  }, [props.config.chatId, props.config.isGroup, props.config.messageId]);
 
   return (
     <div className={styles.chatCon}>

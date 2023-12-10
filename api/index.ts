@@ -416,13 +416,13 @@ export async function getLastId(
 }
 
 async function isUserInGroup(userId: number, groupId: number) {
-  const [rows] = await pool.execute(
+  const [rows] = (await pool.execute(
     `
     SELECT 1
     FROM Group_member
     WHERE group_id = ? AND user_id = ?;`,
     [groupId, userId]
-  );
+  )) as RowDataPacket[][];
 
   return rows.length > 0;
 }
@@ -441,7 +441,7 @@ export async function getMessages(
     const userInGroup = await isUserInGroup(senderId, recipientId);
     if (userInGroup !== true) return;
 
-    const [rows] = await pool.execute(
+    const [rows] = (await pool.execute(
       `
       SELECT m.*, u.username, m1.message as reply_message FROM 
         Group_replies r
@@ -454,7 +454,7 @@ export async function getMessages(
       LIMIT 10
       ${!greater ? "" : ""}`,
       [recipientId, lastId === -1 ? Infinity : lastId]
-    );
+    )) as RowDataPacket[][];
 
     for (const row of rows) {
       row.created_at = dateToHuman(row.created_at);
@@ -470,7 +470,7 @@ export async function getMessages(
     return rows;
   }
 
-  const [rows] = await pool.execute(
+  const [rows] = (await pool.execute(
     `SELECT m.created_at, m.id, m.message, m.sender_id, m.recipient_id, m1.message as reply_message FROM 
       Replies r
       JOIN Message m1 ON (m1.id = r.replies_to)
@@ -483,7 +483,7 @@ export async function getMessages(
     LIMIT 10
     ${!greater ? "" : ""}`,
     [senderId, recipientId, recipientId, senderId, lastId === -1 ? Infinity : lastId]
-  );
+  )) as RowDataPacket[][];
 
   for (const row of rows) {
     row.created_at = dateToHuman(row.created_at);
@@ -581,13 +581,13 @@ export async function sendMessage(
     );
   }
 
-  const res = await pool.execute(
+  const res = (await pool.execute(
     `
         INSERT INTO Message 
             (recipient_id, sender_id, message) 
             VALUES(?, ?, ?);`,
     [recipient_id, sender_id, content]
-  );
+  )) as mysql.ResultSetHeader[];
 
   const insertId = res[0].insertId;
 
@@ -603,6 +603,8 @@ export async function sendMessage(
               recipient_id = ?;`,
       [insertId, id[1], id[0]]
     );
+
+    if (ids[0] === ids[1]) break;
   }
 
   if (replyId !== -1 && typeof replyId === "number") {

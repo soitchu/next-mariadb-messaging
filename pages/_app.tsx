@@ -7,6 +7,7 @@ import Custom404 from "./404";
 import Login from "./login";
 import { NextUIProvider } from "@nextui-org/react";
 import Register from "./register";
+import Analytics from "./analytics";
 
 export default function App({ Component, pageProps }) {
   const router = useRouter();
@@ -23,6 +24,14 @@ export default function App({ Component, pageProps }) {
     return (
       <NextUIProvider>
         <Register />
+      </NextUIProvider>
+    );
+  }
+
+  if (router.pathname.startsWith("/analytics")) {
+    return (
+      <NextUIProvider>
+        <Analytics />
       </NextUIProvider>
     );
   }
