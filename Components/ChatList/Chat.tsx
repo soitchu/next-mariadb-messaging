@@ -330,7 +330,12 @@ export default function Chat(props) {
                 await sendMessage(message, props.config.chatId, replyId, props.config.isGroup);
                 await fetchNewMessages();
               } else {
-                await editMessage(message, props.config.editId, props.config.isGroup, messageData);
+                await editMessage(
+                  message,
+                  props.config.editId,
+                  props.config.isGroup,
+                  messageData.messages
+                );
                 changeEditMode(false);
               }
 
