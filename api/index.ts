@@ -17,6 +17,112 @@ function dateToHuman(date: Date) {
   return date.toISOString();
 }
 
+interface SearchConfig {
+  time: {
+    from: {
+      hour: number;
+      minute: number;
+    };
+    to: {
+      hour: number;
+      minute: number;
+    };
+  };
+  date: {
+    from: string;
+    to: string;
+  };
+  isReply: boolean;
+  message: string;
+}
+
+export async function search(
+  params: SearchConfig,
+  userId: number,
+  chatId: number,
+  isGroup: boolean
+) {
+  params.message = `%${params.message}%`;
+
+  if (isGroup) {
+    const userInGroup = await isUserInGroup(userId, chatId);
+    if (userInGroup !== true) return;
+
+    const [rows] = await pool.execute(
+      `
+      SELECT m.*, u.username, m1.message as reply_message
+      FROM 
+        Group_replies r
+        JOIN Group_message m1 ON (m1.id = r.replies_to)
+        RIGHT JOIN Group_message m ON (r.message_id = m.id)
+        JOIN User u ON (m.sender_id = u.id)
+      WHERE m.group_id = ?
+            AND m.message LIKE ?
+            AND (? OR CONVERT_TZ(m.created_at, "+00:00", "-08:00") > ?)
+            AND (? OR CONVERT_TZ(m.created_at, "+00:00", "-08:00") < ?)
+            AND (? OR TIME(CONVERT_TZ(m.created_at, "+00:00", "-08:00")) > ?)
+            AND (? OR TIME(CONVERT_TZ(m.created_at, "+00:00", "-08:00")) < ?)
+            AND (? OR m1.message IS NOT NULL)
+      ORDER BY m.id DESC`,
+      [
+        chatId,
+        params.message,
+        !params.date.from,
+        params.date.from ?? null,
+        !params.date.to,
+        params.date.to ?? null,
+        !params.time.from.hour && !params.time.from.minute,
+        `${params.time.from.hour}:${params.time.from.minute}`,
+        !params.time.to.hour && !params.time.to.minute,
+        `${params.time.to.hour}:${params.time.to.minute}`,
+        params.isReply !== true
+      ]
+    );
+
+    console.log(rows);
+
+    return rows;
+  }
+
+  const [rows] = await pool.execute(
+    `
+    SELECT m.created_at, m.id, m.message, m.sender_id, m.recipient_id, m1.message as reply_message 
+    FROM 
+      Replies r
+      JOIN Message m1 ON (m1.id = r.replies_to)
+      RIGHT JOIN Message m ON (r.message_id = m.id)
+    WHERE (
+            (m.sender_id = ? AND m.recipient_id = ?) OR 
+            (m.sender_id = ? AND m.recipient_id = ?)
+          ) 
+          AND m.message LIKE ?
+          AND (? OR CONVERT_TZ(m.created_at, "+00:00", "-08:00") > ?)
+          AND (? OR CONVERT_TZ(m.created_at, "+00:00", "-08:00") < ?)
+          AND (? OR TIME(CONVERT_TZ(m.created_at, "+00:00", "-08:00")) > ?)
+          AND (? OR TIME(CONVERT_TZ(m.created_at, "+00:00", "-08:00")) < ?)
+          AND (? OR m1.message IS NOT NULL)
+    ORDER BY m.id DESC`,
+    [
+      userId,
+      chatId,
+      chatId,
+      userId,
+      params.message,
+      !params.date.from,
+      params.date.from ?? null,
+      !params.date.to,
+      params.date.to ?? null,
+      !params.time.from.hour && !params.time.from.minute,
+      `${params.time.from.hour}:${params.time.from.minute}`,
+      !params.time.to.hour && !params.time.to.minute,
+      `${params.time.to.hour}:${params.time.to.minute}`,
+      params.isReply !== true
+    ]
+  );
+
+  return rows;
+}
+
 export async function getChats(userId: number) {
   await init();
   const [rows] = (await pool.execute(
@@ -542,6 +648,7 @@ export async function init() {
 
 (async function () {
   await init();
+  // console.log(await search("qwe", 1, 1, false));
 
   // for (let i = 0; i < 200000; i++) {
   //   const id1 = 60000 + Math.floor(Math.random() * (235131 - 60000));

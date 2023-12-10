@@ -15,6 +15,7 @@ CREATE TABLE User(
     username VARCHAR(50) NOT NULL UNIQUE,
     hashed_password BLOB NOT NULL,
     deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    isAdmin BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY(id)
 );
 
@@ -37,6 +38,9 @@ CREATE TABLE Chat(
     FOREIGN KEY (recipient_id) REFERENCES User(id)
 );
 
+
+-- Although this is a circular relation, this enables us to delete
+-- a chat along with its messages by just removing the chat entry
 
 CREATE TABLE Message(
     id BIGINT AUTO_INCREMENT NOT NULL,

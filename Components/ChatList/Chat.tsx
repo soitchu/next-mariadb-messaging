@@ -65,6 +65,7 @@ export default function Chat(props) {
   const [forceRefresh, changeForceRefresh] = React.useState(0);
   const [replyId, changeReplyId] = React.useState(-1);
   const [editMode, changeEditMode] = React.useState(false);
+  const [selectedRef, changeSelectedRef] = React.useState(useRef(null));
 
   let fetching = false;
   let newFetching = false;
@@ -96,9 +97,11 @@ export default function Chat(props) {
   for (const messageObj of messageData.messages) {
     // @todo refactor and optimise this abomination
     if (messageObj.id in messageLookUp) continue;
-
-    const messageElement = (
+    const messageElem = (
       <Message
+        {...(messageObj.id === props.config.messageId
+          ? { reference: selectedRef }
+          : { reference: null })}
         key={messageObj.id}
         content={messageObj.message}
         align={
@@ -122,8 +125,8 @@ export default function Chat(props) {
       ></Message>
     );
 
-    messageLookUp[messageObj.id] = messageElement;
-    messageElems.push(messageElement);
+    messageLookUp[messageObj.id] = messageElem;
+    messageElems.push(messageElem);
   }
 
   messageElems.reverse();
@@ -156,16 +159,18 @@ export default function Chat(props) {
           })
         ).json();
 
-        newMessages.reverse();
-        messageData.messages.unshift(...newMessages);
+        if (newMessages.length !== 0) {
+          newMessages.reverse();
+          messageData.messages.unshift(...newMessages);
 
-        changeMessageData({
-          messages: messageData.messages,
-          newestId: newMessages[0].id,
-          oldestId: messageData.oldestId
-        });
+          changeMessageData({
+            messages: messageData.messages,
+            newestId: newMessages[0].id,
+            oldestId: messageData.oldestId
+          });
 
-        props.config.scrollToBottom = true;
+          props.config.scrollToBottom = true;
+        }
       } else {
         newFetching = false;
       }
@@ -177,14 +182,6 @@ export default function Chat(props) {
 
   async function fetchOldMessages(iniFetch: boolean = false, messageId: number = -1) {
     if (fetching) return;
-
-    console.log(props.config);
-    console.log(
-      iniFetch,
-      messageId,
-      iniFetch ? (messageId === -1 ? -1 : messageId + 1) : messageData.oldestId
-    );
-
     fetching = true;
     try {
       const response = await (
@@ -232,7 +229,8 @@ export default function Chat(props) {
       style={{
         height: "100%",
         overflowY: "auto",
-        overflowX: "hidden"
+        overflowX: "hidden",
+        scrollBehavior: "smooth"
       }}
       ref={containerElem}
       onScroll={function (event) {
@@ -247,16 +245,23 @@ export default function Chat(props) {
     </div>
   );
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    console.log("newestID useffect", selectedRef.current);
+  }, [messageData.newestId, messageData.oldestId, messageData.messages, props.config.messageId]);
 
   // This makes sure that the fetchNewMessages has the updated
   // state values
   useEffect(() => {
     const id = setInterval(fetchNewMessages, 3000);
+
+    const scrollHeight = containerElem.current.scrollHeight;
+    containerElem.current.scrollTop = scrollHeight + 100;
+
     return () => {
       // socket.disconnect();
       clearInterval(id);
     };
+
     // const socket = io({
     //   path: "/api/socket"
     // });
@@ -270,7 +275,13 @@ export default function Chat(props) {
       await fetchOldMessages(true, props.config.messageId);
 
       if (props.config.messageId !== -1) {
+        messageData.newestId = 0;
         await fetchNewMessages(true, props.config.messageId);
+        setTimeout(() => {
+          if (props.config.messageId !== -1) {
+            selectedRef.current?.scrollIntoView();
+          }
+        }, 200);
       } else {
         setTimeout(() => {
           const scrollHeight = containerElem.current.scrollHeight;
@@ -278,7 +289,7 @@ export default function Chat(props) {
         }, 200);
       }
     })();
-  }, [props.config.chatId]);
+  }, [props.config.chatId, props.config.messageId]);
 
   return (
     <div className={styles.chatCon}>
@@ -286,6 +297,7 @@ export default function Chat(props) {
         config={{ selectedUserId: -1 }}
         isGroup={props.config.isGroup}
         chatId={Number(props.config.chatId)}
+        openSearch={props.openSearch}
       ></ChatTopMenu>
       {messageContainer}
       <div className={styles.inputCon}>

@@ -16,7 +16,22 @@
   animation-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55); */
 }
 
+.message.highlighted {
+  color: white;
+  background-color: rgb(111, 122, 196);
+}
+
+.message.highlighted .time {
+  color: white;
+}
+
+.message.highlighted .reply {
+  color: white;
+  background-color: black;
+}
+
 .reply {
+  margin-top: 10px;
   font-size: 0.9em;
   border-radius: 10px;
   background-color: #797979;

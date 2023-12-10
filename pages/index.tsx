@@ -5,6 +5,7 @@ import Chat from "../Components/ChatList/Chat";
 import { ToastContainer } from "react-toastify";
 import { useRouter } from "next/router";
 import { getUserIdByCookie } from "../Components/helper";
+import SearchPanel from "../Components/SearchPanel";
 
 export const getServerSideProps = async (context) => {
   const userId = Number(await getUserIdByCookie(context.req.cookies["X-Auth-Token"]));
@@ -33,12 +34,20 @@ export default function Home(props) {
     isGroup: router.query.isGroup === "true",
     messageId: getMessageId(router.query.messageId as string)
   });
+  const [isSearchOpen, changeSearch] = useState(false);
+
+  function openSearch() {
+    changeSearch(true);
+  }
+
+  function closeSearch() {
+    changeSearch(false);
+  }
 
   useEffect(() => {
     router.events.on("routeChangeStart", (url, obj) => {
       url.startsWith("/") && (url = url.substring(1));
       const params = new URLSearchParams(url);
-
       changeChatConfig({
         chatId: Number(params.get("chat")),
         isGroup: params.get("isGroup") === "true",
@@ -50,14 +59,15 @@ export default function Home(props) {
   return (
     <div
       style={{
-        height: "100%"
+        height: "100%",
+        display: "flex"
       }}
     >
       <ToastContainer draggable pauseOnHover theme="dark" />
 
       <ChatList></ChatList>
 
-      {chatConfig.chatId && (
+      {!!chatConfig.chatId && (
         <Chat
           data={[]}
           config={{
@@ -68,7 +78,17 @@ export default function Home(props) {
             isGroup: chatConfig.isGroup,
             scrollToBottom: true
           }}
+          openSearch={openSearch}
         ></Chat>
+      )}
+
+      {isSearchOpen && (
+        <SearchPanel
+          closeSearch={closeSearch}
+          recipientId={chatConfig.chatId}
+          isGroup={chatConfig.isGroup}
+          userId={Number(props.userId)}
+        ></SearchPanel>
       )}
     </div>
   );

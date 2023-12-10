@@ -1,10 +1,19 @@
-export function dateToHuman(dateString: string) {
-  const date = new Date(dateString);
+import moment from "moment";
+
+function checkIfDayisToday(date: Date) {
+  const today = new Date();
   return (
-    date.getHours().toString().padStart(2, "0") +
-    " : " +
-    date.getMinutes().toString().padStart(2, "0")
+    today.getDate() === date.getDate() &&
+    today.getMonth() === date.getMonth() &&
+    today.getFullYear() === date.getFullYear()
   );
+}
+
+export function dateToHuman(dateString: string, includeDate = false) {
+  const date = new Date(dateString);
+  return !checkIfDayisToday(date)
+    ? moment().format("HH:mm - Do MMM YYYY")
+    : moment().format("HH:mm");
 }
 
 export function binarySearch(data, val) {

@@ -1,0 +1,37 @@
+.container {
+  height: 100%;
+  background-color: rgb(0, 0, 0);
+  min-width: 450px;
+  display: inline-block;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.inputCon {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  position: sticky;
+}
+
+.input {
+  display: inline-block;
+  margin: 10px;
+}
+
+.button {
+  height: 40px;
+  max-width: 40px !important;
+  min-width: 40px !important;
+  margin: 10px;
+  padding: 10px;
+  background-color: white !important;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 100%;
+}
+
+.filterLabel {
+  min-width: fit-content;
+}

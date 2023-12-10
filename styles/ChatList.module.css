@@ -1,6 +1,6 @@
 .chatListCon {
   max-width: 100%;
-  width: 400px;
+  min-width: 400px;
   background-color: #e2e2e2;
   height: 100%;
   overflow: hidden;

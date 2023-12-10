@@ -1,10 +1,7 @@
-import remarkGfm from "remark-gfm";
-import styles from "../../styles/Message.module.css";
-import { binarySearch, dateToHuman } from "../helperClient";
-import Markdown from "react-markdown";
 import { Menu, Item, Separator, Submenu, useContextMenu } from "react-contexify";
 import "react-contexify/ReactContexify.css";
 import { toast } from "react-toastify";
+import { CoreMessage } from "./CoreMessage";
 
 async function deleteMessage(messageId: string, chatId: string, cb: Function, isGroup: boolean) {
   // @todo toast the error message
@@ -35,7 +32,8 @@ export default function Message({
   deleteFunction,
   setReply,
   isGroup,
-  editMessage
+  editMessage,
+  reference
 }) {
   const { show } = useContextMenu({
     id: `message-${id}`
@@ -49,20 +47,16 @@ export default function Message({
 
   return (
     <>
-      <div
-        className={styles.message + " " + styles[align]}
-        data-id={id}
-        onContextMenu={handleContextMenu}
-      >
-        {username && <div className={styles.time}>{username}</div>}
-        {repliesTo && (
-          <div className={styles.reply}>
-            <Markdown remarkPlugins={[remarkGfm]}>{repliesTo}</Markdown>
-          </div>
-        )}
-        <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
-        <div className={styles.time}>{dateToHuman(time)}</div>
-      </div>
+      <CoreMessage
+        time={time}
+        repliesTo={repliesTo}
+        username={username}
+        reference={reference}
+        content={content}
+        handleContextMenu={handleContextMenu}
+        align={align}
+        id={id}
+      ></CoreMessage>
 
       <Menu theme={"dark"} id={`message-${id}`}>
         <Item onClick={() => setReply(id)}>Reply</Item>

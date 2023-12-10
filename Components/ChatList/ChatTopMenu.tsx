@@ -11,7 +11,7 @@ import React, { useEffect } from "react";
 import styles from "../../styles/Chat.module.css";
 import stylesNext from "../../styles/next.module.css";
 import { toast } from "react-toastify";
-import { Delete } from "@mui/icons-material";
+import { Delete, Search } from "@mui/icons-material";
 
 async function addToGroup(userId: number, groupId: number) {
   const response = await fetch("/api/addToGroup", {
@@ -98,7 +98,7 @@ export default function ChatTopMenu(props) {
           }}
         >
           <PopoverTrigger>
-            <Button style={{ minWidth: "30px" }}>
+            <Button style={{ minWidth: "40px", width: "40px" }}>
               <GroupAdd
                 style={{
                   cursor: "pointer"
@@ -134,7 +134,7 @@ export default function ChatTopMenu(props) {
         </Popover>
       )}
 
-      <Button style={{ minWidth: "30px", marginLeft: "10px" }}>
+      <Button style={{ minWidth: "40px", width: "40px", marginLeft: "10px" }}>
         <Delete
           style={{
             cursor: "pointer"
@@ -152,6 +152,17 @@ export default function ChatTopMenu(props) {
             }
           }}
         ></Delete>
+      </Button>
+
+      <Button style={{ minWidth: "40px", width: "40px", marginLeft: "10px" }}>
+        <Search
+          style={{
+            cursor: "pointer"
+          }}
+          onClick={async () => {
+            props.openSearch();
+          }}
+        ></Search>
       </Button>
     </div>
   );
