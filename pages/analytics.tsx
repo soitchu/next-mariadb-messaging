@@ -7,7 +7,7 @@ import {
   isAdmin
 } from "../api/analytics";
 import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
-import { Bar, Pie } from "react-chartjs-2";
+import { Bar } from "react-chartjs-2";
 import styles from "../styles/Analytics.module.css";
 import { getUserIdByCookie } from "../Components/helper";
 

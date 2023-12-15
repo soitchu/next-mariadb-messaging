@@ -112,7 +112,14 @@ export default function SearchPanel(props) {
         >
           <PopoverTrigger>
             <Button className={styles.button} style={{ marginLeft: 0 }}>
-              <FilterList className={styles.button} htmlColor="black"></FilterList>
+              <FilterList
+                className={styles.button}
+                htmlColor="black"
+                style={{
+                  height: "40px",
+                  width: "40px"
+                }}
+              ></FilterList>
             </Button>
           </PopoverTrigger>
           <PopoverContent style={{ backgroundColor: "red" }}>
