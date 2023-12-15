@@ -14,8 +14,7 @@ CREATE TABLE User(
     id BIGINT AUTO_INCREMENT NOT NULL,
     username VARCHAR(50) NOT NULL UNIQUE,
     hashed_password BLOB NOT NULL,
-    deleted BOOLEAN NOT NULL DEFAULT FALSE,
-    isAdmin BOOLEAN NOT NULL DEFAULT FALSE,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY(id)
 );
 
@@ -32,7 +31,7 @@ CREATE TABLE Chat(
     sender_id BIGINT NOT NULL,
     message_id BIGINT,
     unread_count INT DEFAULT 0 NOT NULL,
-    created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
+    message_created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
     PRIMARY KEY(recipient_id, sender_id),
     FOREIGN KEY (sender_id) REFERENCES User(id),
     FOREIGN KEY (recipient_id) REFERENCES User(id)
@@ -110,7 +109,7 @@ CREATE TABLE Group_message(
 CREATE TABLE Group_chat(
     group_id BIGINT NOT NULL,
     message_id BIGINT NULL,
-    created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
+    message_created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
     PRIMARY KEY(group_id),
     FOREIGN KEY (group_id) REFERENCES User_group(id) ON DELETE CASCADE,
     FOREIGN KEY (message_id) REFERENCES Group_message(id) ON DELETE SET NULL
@@ -125,12 +124,12 @@ CREATE TABLE Group_replies(
 );
 
 -- Password: qwerty1234
-INSERT INTO User VALUES(1, "user1", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE, FALSE);
-INSERT INTO User VALUES(2, "user2", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE, FALSE);
-INSERT INTO User VALUES(3, "user3", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE, FALSE);
+INSERT INTO User VALUES(1, "user1", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE);
+INSERT INTO User VALUES(2, "user2", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE);
+INSERT INTO User VALUES(3, "user3", "$2b$10$ZBvVifQCBi32AbQy7qpeU.7d5IaZYSR23s.YcjnHsfc7k2i7kcMVm", FALSE);
 
 -- Password: admin
-INSERT INTO User VALUES(4, "admin", "$2b$10$6/SoWpxPc7axHFymvZy1TOAeav.VmCU.JVI/Yifjo9mSP/qYwxGfO", FALSE, TRUE);
+INSERT INTO User VALUES(4, "admin", "$2b$10$6/SoWpxPc7axHFymvZy1TOAeav.VmCU.JVI/Yifjo9mSP/qYwxGfO", TRUE);
 
 
 INSERT INTO Chat (recipient_id, sender_id, message_id, unread_count) VALUES(1, 2, NULL, 0);

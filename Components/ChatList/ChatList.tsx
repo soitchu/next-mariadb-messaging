@@ -262,7 +262,7 @@ export default function ChatList(props) {
             <ChatCard
               id={chatData.sender_id}
               username={chatData.username}
-              time={chatData.created_at}
+              time={chatData.message_created_at}
               message={chatData.message}
               unreadCount={chatData.unread_count}
               isGroup={chatData.is_group}

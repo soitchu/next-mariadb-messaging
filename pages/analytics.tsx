@@ -3,15 +3,22 @@ import {
   averageMessageAt,
   getLongestMessages,
   getMostActiveHours,
-  getMostActiveUser
+  getMostActiveUser,
+  isAdmin
 } from "../api/analytics";
 import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 import { Bar, Pie } from "react-chartjs-2";
 import styles from "../styles/Analytics.module.css";
+import { getUserIdByCookie } from "../Components/helper";
 
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export const getServerSideProps = async (context) => {
+  const userId = await getUserIdByCookie(context.req.cookies["X-Auth-Token"]);
+  const admin = (await isAdmin(userId)) === 1;
+
+  if (!admin) return { props: { auth: false } };
+
   const [data, activeUserData, longestMessages] = await Promise.all([
     getMostActiveHours(),
     getMostActiveUser(),
@@ -77,6 +84,10 @@ function getOption(xLabel: string, yLabel: string, title: string) {
 export default function Analytics(props) {
   console.log(props.chartData);
   let count = 0;
+
+  if (props.auth === false) {
+    return <div>Not an admin</div>;
+  }
 
   return (
     <div style={{ textAlign: "center" }}>

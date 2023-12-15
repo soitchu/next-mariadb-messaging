@@ -58,7 +58,7 @@ async function sendMessage(
         UPDATE Chat 
         SET
             message_id =  ?, 
-            created_at = UTC_TIMESTAMP(),
+            message_created_at = UTC_TIMESTAMP(),
             unread_count = unread_count + 1
         WHERE sender_id = ? AND
               recipient_id = ?;`,

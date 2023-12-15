@@ -68,3 +68,13 @@ export async function getLongestMessages() {
     ORDER BY LENGTH(message) DESC`)) as RowDataPacket[][];
   return rows;
 }
+
+export async function isAdmin(userId: string) {
+  const [rows] = (await pool.execute(
+    `SELECT is_admin 
+     FROM User
+     WHERE id = ?`,
+    [userId]
+  )) as RowDataPacket[][];
+  return rows[0].is_admin;
+}

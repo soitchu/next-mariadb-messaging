@@ -133,7 +133,7 @@ export async function getChats(userId: number) {
           m.message, 
           m.id, 
           u.username, 
-          c.created_at,
+          c.message_created_at,
           FALSE as is_group
         FROM Chat c
             JOIN User u ON (c.sender_id = u.id)
@@ -148,20 +148,20 @@ export async function getChats(userId: number) {
           m.message, 
           m.id, 
           g.name as username, 
-          gc.created_at,
+          gc.message_created_at,
           TRUE as is_group
         FROM Group_chat gc 
              JOIN User_group g ON (g.id = gc.group_id)
              JOIN Group_member gm ON (gm.group_id = g.id AND gm.user_id = ?)
              LEFT JOIN Group_message m ON (m.id = gc.message_id)
              
-        ORDER BY created_at DESC`,
+        ORDER BY message_created_at DESC`,
     [userId, userId]
   )) as RowDataPacket[][];
 
   for (const row of rows) {
-    if (row.created_at) {
-      row.created_at = dateToHuman(new Date(row.created_at));
+    if (row.message_created_at) {
+      row.message_created_at = dateToHuman(new Date(row.message_created_at));
     }
   }
 
@@ -533,7 +533,7 @@ export async function sendMessage(
       `UPDATE Group_chat 
        SET 
          message_id = ?,
-         created_at = UTC_TIMESTAMP()
+         message_created_at = UTC_TIMESTAMP()
        WHERE group_id = ?;`,
       [insertId, recipient_id]
     );
@@ -597,7 +597,7 @@ export async function sendMessage(
         UPDATE Chat 
         SET
             message_id =  ?, 
-            created_at = UTC_TIMESTAMP(),
+            message_created_at = UTC_TIMESTAMP(),
             unread_count = unread_count + 1
         WHERE sender_id = ? AND
               recipient_id = ?;`,
