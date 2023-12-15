@@ -1,0 +1,33 @@
+.card {
+  background-color: rgb(56, 56, 56);
+  text-align: justify;
+  padding: 15px;
+  overflow: hidden;
+  border-radius: 10px;
+  margin: 20px;
+  max-width: 300px;
+  display: inline-block;
+}
+
+.cardText {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+
+.expand {
+  -webkit-line-clamp: none;
+  line-clamp: none;
+}
+
+.username {
+  margin-bottom: 10px;
+  color: rgb(188, 188, 188);
+  font-size: 0.8rem;
+}
+
+.chart {
+  margin: 30px auto;
+}

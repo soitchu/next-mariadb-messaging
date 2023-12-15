@@ -47,7 +47,7 @@ async function sendMessage(
         INSERT INTO Message 
             (recipient_id, sender_id, message, created_at) 
             VALUES(?, ?, ?, ?);`,
-    [recipient_id, sender_id, content, sentAt]
+    [recipient_id, sender_id, content.trim(), sentAt]
   );
 
   const insertId = res[0].insertId;
@@ -118,8 +118,10 @@ async function addConversation(convo) {
   const messageArray = [];
 
   for (const message of convo.messages) {
+    const randomNum = Math.pow(Math.random(), 2);
+    timestamp += 3.6e6 * 1 + Math.floor(randomNum * 3.6e6 * 24); // 1-24 hours
+
     const sentAt = new Date(timestamp);
-    timestamp += 3.6e6 + Math.floor(Math.random() * 1.8e7); // 1-6 hours
     messageArray.push(ids[count % 2], ids[(count + 1) % 2], message, sentAt);
 
     try {

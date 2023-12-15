@@ -31,7 +31,7 @@ export default function App({ Component, pageProps }) {
   if (router.pathname.startsWith("/analytics")) {
     return (
       <NextUIProvider>
-        <Analytics />
+        <Analytics {...pageProps} />
       </NextUIProvider>
     );
   }

@@ -22,7 +22,7 @@ const conversations = [];
 
 for (const conversationUUID in data) {
   const conversationData = {};
-  const users = userCombo[count];
+  const users = userCombo[Math.floor(Math.pow(Math.random(), 2) * userCombo.length)];
 
   conversationData.agents = [users[0], users[1]];
   conversationData.messages = data[conversationUUID].content.map((x) => {

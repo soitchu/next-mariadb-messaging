@@ -637,7 +637,7 @@ export async function init() {
     host: "localhost",
     user: "soitchu",
     database: "test",
-    connectionLimit: 10,
+    connectionLimit: 100,
     timezone: "+00:00"
   });
 

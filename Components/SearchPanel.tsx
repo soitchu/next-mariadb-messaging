@@ -166,7 +166,7 @@ export default function SearchPanel(props) {
                   style={{ maxWidth: "50px" }}
                   className={styles.input}
                   ref={fromHour}
-                  defaultValue={searchParam.current.time.from.hour}
+                  defaultValue={searchParam.current.time.from.hour?.toString()}
                 ></Input>{" "}
                 :
                 <Input
@@ -176,7 +176,7 @@ export default function SearchPanel(props) {
                   style={{ maxWidth: "50px" }}
                   className={styles.input}
                   ref={fromMinute}
-                  defaultValue={searchParam.current.time.from.minute}
+                  defaultValue={searchParam.current.time.from.minute?.toString()}
                 ></Input>
                 <div className={styles.filterLabel}>and: </div>
                 <Input
@@ -186,7 +186,7 @@ export default function SearchPanel(props) {
                   style={{ maxWidth: "50px" }}
                   className={styles.input}
                   ref={toHour}
-                  defaultValue={searchParam.current.time.to.hour}
+                  defaultValue={searchParam.current.time.to.hour?.toString()}
                 ></Input>
                 :
                 <Input
@@ -196,7 +196,7 @@ export default function SearchPanel(props) {
                   style={{ maxWidth: "50px" }}
                   className={styles.input}
                   ref={toMinute}
-                  defaultValue={searchParam.current.time.to.minute}
+                  defaultValue={searchParam.current.time.to.minute?.toString()}
                 ></Input>
               </div>
 
