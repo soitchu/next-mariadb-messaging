@@ -451,8 +451,7 @@ export async function getMessages(
       WHERE m.group_id = ?
             AND ${condition}
       ORDER BY m.id ${order} 
-      LIMIT 10
-      ${!greater ? "" : ""}`,
+      LIMIT 10`,
       [recipientId, lastId === -1 ? Infinity : lastId]
     )) as RowDataPacket[][];
 
@@ -471,17 +470,21 @@ export async function getMessages(
   }
 
   const [rows] = (await pool.execute(
-    `SELECT m.created_at, m.id, m.message, m.sender_id, m.recipient_id, m1.message as reply_message FROM 
-      Replies r
-      JOIN Message m1 ON (m1.id = r.replies_to)
-      RIGHT JOIN Message m ON (r.message_id = m.id)
+    `SELECT m.created_at, 
+            m.id, 
+            m.message, 
+            m.sender_id, 
+            m.recipient_id, 
+            m1.message as reply_message 
+      FROM Replies r
+           JOIN Message m1 ON (m1.id = r.replies_to)
+           RIGHT JOIN Message m ON (r.message_id = m.id)
     WHERE (
             (m.sender_id = ? AND m.recipient_id = ?) OR 
             (m.sender_id = ? AND m.recipient_id = ?)
           ) AND ${condition}
     ORDER BY m.id ${order} 
-    LIMIT 10
-    ${!greater ? "" : ""}`,
+    LIMIT 10`,
     [senderId, recipientId, recipientId, senderId, lastId === -1 ? Infinity : lastId]
   )) as RowDataPacket[][];
 

@@ -47,8 +47,8 @@ CREATE TABLE Message(
     sender_id BIGINT NOT NULL,
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT UTC_TIMESTAMP NOT NULL,
-    FOREIGN KEY (sender_id) REFERENCES Chat(sender_id) ON DELETE CASCADE,
-    FOREIGN KEY (recipient_id) REFERENCES Chat(recipient_id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id, recipient_id) REFERENCES Chat(sender_id, recipient_id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id, recipient_id) REFERENCES Chat(recipient_id, sender_id) ON DELETE CASCADE,
     PRIMARY KEY(id)
 );
 
@@ -134,9 +134,9 @@ INSERT INTO User VALUES(4, "admin", "$2b$10$6/SoWpxPc7axHFymvZy1TOAeav.VmCU.JVI/
 
 INSERT INTO Chat (recipient_id, sender_id, message_id, unread_count) VALUES(1, 2, NULL, 0);
 INSERT INTO Chat (recipient_id, sender_id, message_id, unread_count) VALUES(2, 1, NULL, 0);
-INSERT INTO Message (id, recipient_id, sender_id, message) VALUES(1, 1, 1, "");
-INSERT INTO Message (recipient_id, sender_id, message) VALUES(1, 2, "Hi :D");
 
+
+INSERT INTO Message (recipient_id, sender_id, message) VALUES(1, 2, "Hi :D");
 INSERT INTO Message (recipient_id, sender_id, message) VALUES(2, 1, "Hello!");
 
 INSERT INTO User_group (name, owner_id) VALUES("test group", 1);

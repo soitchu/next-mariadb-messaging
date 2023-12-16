@@ -8,7 +8,11 @@ import { getUserIdByCookie } from "../Components/helper";
 import SearchPanel from "../Components/SearchPanel";
 
 export const getServerSideProps = async (context) => {
-  const userId = Number(await getUserIdByCookie(context.req.cookies["X-Auth-Token"]));
+  let userId = -1;
+
+  try {
+    userId = Number(await getUserIdByCookie(context.req.cookies["X-Auth-Token"]));
+  } catch (err) {}
 
   return {
     props: {
@@ -29,6 +33,7 @@ function getMessageId(messageId: string | null) {
 
 export default function Home(props) {
   const router = useRouter();
+
   const [chatConfig, changeChatConfig] = useState({
     chatId: Number(router.query.chat),
     isGroup: router.query.isGroup === "true",
@@ -45,6 +50,12 @@ export default function Home(props) {
   }
 
   useEffect(() => {
+    if (props.userId === -1) {
+      router.push({
+        pathname: "/login"
+      });
+    }
+
     router.events.on("routeChangeStart", (url, obj) => {
       url.startsWith("/") && (url = url.substring(1));
       const params = new URLSearchParams(url);
@@ -57,39 +68,41 @@ export default function Home(props) {
   }, []);
 
   return (
-    <div
-      style={{
-        height: "100%",
-        display: "flex"
-      }}
-    >
-      <ToastContainer draggable pauseOnHover theme="dark" />
+    props.userId !== -1 && (
+      <div
+        style={{
+          height: "100%",
+          display: "flex"
+        }}
+      >
+        <ToastContainer draggable pauseOnHover theme="dark" />
 
-      <ChatList></ChatList>
+        <ChatList></ChatList>
 
-      {!!chatConfig.chatId && (
-        <Chat
-          data={[]}
-          config={{
-            chatId: chatConfig.chatId,
-            userId: Number(props.userId),
-            messageId: chatConfig.messageId,
-            editId: -1,
-            isGroup: chatConfig.isGroup,
-            scrollToBottom: true
-          }}
-          openSearch={openSearch}
-        ></Chat>
-      )}
+        {!!chatConfig.chatId && (
+          <Chat
+            data={[]}
+            config={{
+              chatId: chatConfig.chatId,
+              userId: Number(props.userId),
+              messageId: chatConfig.messageId,
+              editId: -1,
+              isGroup: chatConfig.isGroup,
+              scrollToBottom: true
+            }}
+            openSearch={openSearch}
+          ></Chat>
+        )}
 
-      {isSearchOpen && (
-        <SearchPanel
-          closeSearch={closeSearch}
-          recipientId={chatConfig.chatId}
-          isGroup={chatConfig.isGroup}
-          userId={Number(props.userId)}
-        ></SearchPanel>
-      )}
-    </div>
+        {isSearchOpen && (
+          <SearchPanel
+            closeSearch={closeSearch}
+            recipientId={chatConfig.chatId}
+            isGroup={chatConfig.isGroup}
+            userId={Number(props.userId)}
+          ></SearchPanel>
+        )}
+      </div>
+    )
   );
 }
