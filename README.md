@@ -1,5 +1,7 @@
 # Presentation video
 
+https://www.youtube.com/watch?v=Oc4Rao38HPk
+
 # SQL queries
 
 All the sql queries used by the webapp are in [api/index.ts](api/index.ts)
