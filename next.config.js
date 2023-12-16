@@ -6,8 +6,5 @@ module.exports = {
     // !! WARN !!
     ignoreBuildErrors: true
   },
-  reactStrictMode: true,
-  experimental: {
-    instrumentationHook: true
-  }
+  reactStrictMode: true
 };

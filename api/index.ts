@@ -7,12 +7,6 @@ export async function initSocket(server) {
   initWebSocket(server);
 }
 
-const random = Math.random();
-console.log(random);
-// setInterval(() => {
-//   console.log("ee", random);
-// }, 1000);
-
 function dateToHuman(date: Date) {
   return date.toISOString();
 }
@@ -647,23 +641,6 @@ export async function init() {
   hasBeenInitialised = true;
 }
 
-// for(let i = 0; i < 100000; i++) {
-//     sendMessage(1, 1, i.toString());
-// }
-
 (async function () {
   await init();
-  // console.log(await search("qwe", 1, 1, false));
-
-  // for (let i = 0; i < 200000; i++) {
-  //   const id1 = 60000 + Math.floor(Math.random() * (235131 - 60000));
-  //   const id2 = 60000 + Math.floor(Math.random() * (235131 - 60000));
-
-  //   try {
-  //     await pool.execute(`INSERT INTO Replies VALUES(?, ?)`, [id1, id2]);
-  //   } catch (err) {
-  //     console.log(id1, id2);
-  //     // console.error(err);
-  //   }
-  // }
 })();
