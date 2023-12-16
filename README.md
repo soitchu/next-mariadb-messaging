@@ -8,6 +8,9 @@ The ER diagram can be found here: [er.png](er.png)
 
 All the sql queries used by the webapp are in [api/index.ts](api/index.ts)
 
+The schema of the tables, and the rationale behind the design can be fouund in
+[sql/user.sql](sql/user.sql)
+
 An sql dump of the schema of the tables and the data it had can be found in [dump.sql](dump.sql).
 
 [dummy-data/](dummy-data/) has all the files that were used to populate the tables.
@@ -22,6 +25,12 @@ following data:
 1. The longest messages and their length.
 2. The most active hours.
 3. Users who send the most messages.
+
+Note: You must be an admin to access the `/analytics` path. The default username and password in the
+sql dump is:
+
+    username: admin
+    password: admin
 
 Apart from this, when messages are retrieved, complex queries are used to retrive them and sort
 them, as highlighted in the presentation video.
@@ -56,6 +65,8 @@ To build the webapp in production mode it has to be built first:
 To run the production build on a specific port, pass `PORT` as en environment vairable:
 
 `PORT=3000 npm run start`
+
+Note: the default password of all the users is `qwerty1234`.
 
 # Description
 
