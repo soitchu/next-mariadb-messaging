@@ -2,6 +2,8 @@
 
 https://www.youtube.com/watch?v=Oc4Rao38HPk
 
+The ER diagram can be found here: [er.png](er.png)
+
 # SQL queries
 
 All the sql queries used by the webapp are in [api/index.ts](api/index.ts)
